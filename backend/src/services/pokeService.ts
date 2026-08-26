@@ -3,6 +3,7 @@ import { Poke } from "../models/Poke.js";
 import { User } from "../models/User.js";
 import { emitPoke, refreshUserConversationRooms, type RealtimePokePayload } from "../realtime/socket.js";
 import { AppError } from "../utils/errors.js";
+import { idOf } from "../utils/ids.js";
 import { getOrCreateDirectConversation } from "./conversationService.js";
 
 const POKE_COOLDOWN_MS = 30_000;
@@ -13,13 +14,14 @@ export async function sendPoke(user: AuthUser, toUserId: string): Promise<Realti
   const target = await User.findOne({ _id: toUserId, active: true });
   if (!target) throw new AppError(404, "User not found");
 
-  const recent = await Poke.findOne({
-    fromUserId: user.id,
-    toUserId,
-    createdAt: { $gte: new Date(Date.now() - POKE_COOLDOWN_MS) },
-  })
-    .sort({ createdAt: -1 })
-    .lean();
+  const recent = await Poke.findOne(
+    {
+      fromUserId: user.id,
+      toUserId,
+      createdAt: { $gte: new Date(Date.now() - POKE_COOLDOWN_MS) },
+    },
+    { sort: { createdAt: -1 } },
+  );
 
   if (recent) {
     throw new AppError(429, "Please wait before poking again");
@@ -50,19 +52,25 @@ export async function sendPoke(user: AuthUser, toUserId: string): Promise<Realti
 }
 
 export async function listRecentPokes(user: AuthUser, limit = 8) {
-  const pokes = await Poke.find({ toUserId: user.id })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate("fromUserId", "name role")
-    .lean();
+  const pokes = await Poke.find(
+    { toUserId: user.id },
+    {
+      sort: { createdAt: -1 },
+      limit,
+      populate: "fromUserId",
+    },
+  );
 
   return pokes.map((p) => {
-    const from = p.fromUserId as { _id?: { toString(): string }; name?: string; role?: string } | null;
+    const from = p.fromUserId as { _id?: { toString(): string }; name?: string; role?: string } | string | null;
+    const fromId = typeof from === "object" && from !== null ? from._id?.toString() : idOf(p.fromUserId);
+    const fromName = typeof from === "object" && from !== null ? from.name : undefined;
+    const fromRole = typeof from === "object" && from !== null ? from.role : undefined;
     return {
       _id: p._id.toString(),
-      fromUserId: from?._id?.toString() ?? p.fromUserId.toString(),
-      fromUserName: from?.name ?? "Someone",
-      fromUserRole: from?.role ?? "",
+      fromUserId: fromId ?? idOf(p.fromUserId),
+      fromUserName: fromName ?? "Someone",
+      fromUserRole: fromRole ?? "",
       toUserId: p.toUserId.toString(),
       conversationId: p.conversationId?.toString() ?? null,
       createdAt: p.createdAt.toISOString(),

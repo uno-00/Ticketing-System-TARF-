@@ -1,4 +1,5 @@
 import { displayValueForChoicePlacement } from "./placementChoiceValues.js";
+import { PROFILE_PLACEMENT_VARIABLES } from "./profilePlacementFields.js";
 
 type FormField = {
   type: string;
@@ -47,6 +48,13 @@ export function normalizeTicketAnswers(
     if (raw === undefined || raw === null) {
       normalized[variable] = field.type === "checkbox" ? [] : "";
     } else {
+      normalized[variable] = raw;
+    }
+  }
+
+  for (const variable of PROFILE_PLACEMENT_VARIABLES) {
+    const raw = resolveAnswerForVariable(answers, variable);
+    if (raw !== undefined && raw !== null && raw !== "") {
       normalized[variable] = raw;
     }
   }

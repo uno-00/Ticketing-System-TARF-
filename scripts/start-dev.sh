@@ -2,13 +2,17 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BACKEND_PID=""
+LARAVEL_PID=""
+REALTIME_PID=""
 FRONTEND_PID=""
 FRONTEND_PORT=5173
 
 cleanup() {
-  if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" 2>/dev/null; then
-    kill "$BACKEND_PID" 2>/dev/null || true
+  if [[ -n "$LARAVEL_PID" ]] && kill -0 "$LARAVEL_PID" 2>/dev/null; then
+    kill "$LARAVEL_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$REALTIME_PID" ]] && kill -0 "$REALTIME_PID" 2>/dev/null; then
+    kill "$REALTIME_PID" 2>/dev/null || true
   fi
   if [[ -n "$FRONTEND_PID" ]] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
     kill "$FRONTEND_PID" 2>/dev/null || true
@@ -17,45 +21,57 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 api_ready() {
-  curl -sf --max-time 2 "http://on-prem.x-dcb.net:4000/api/health" >/dev/null 2>&1
+  curl -sf --max-time 2 "http://127.0.0.1:4000/api/health" >/dev/null 2>&1 \
+    || curl -sf --max-time 2 "http://on-prem.x-dcb.net:4000/api/health" >/dev/null 2>&1
+}
+
+realtime_ready() {
+  curl -sf --max-time 2 "http://127.0.0.1:4001/health" >/dev/null 2>&1
 }
 
 frontend_ready() {
   local port="${1:-$FRONTEND_PORT}"
-  curl -sf --max-time 2 "http://on-prem.x-dcb.net:${port}/api/health" >/dev/null 2>&1
+  curl -sf --max-time 2 "http://127.0.0.1:${port}/" >/dev/null 2>&1 \
+    || curl -sf --max-time 2 "http://on-prem.x-dcb.net:${port}/" >/dev/null 2>&1
 }
 
 echo ""
-echo "NMP Ticketing - starting dev environment"
+echo "NMP Ticketing - starting Laravel API + frontend"
 echo ""
 
-if [[ ! -f "$ROOT/backend/.env" ]]; then
-  cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
-  echo "Created backend/.env"
+if [[ ! -f "$ROOT/laravel/.env" ]]; then
+  echo "ERROR: laravel/.env missing"
+  exit 1
 fi
-if [[ ! -f "$ROOT/frontend/.env" ]]; then
+if [[ ! -f "$ROOT/frontend/.env" ]] && [[ -f "$ROOT/frontend/.env.example" ]]; then
   cp "$ROOT/frontend/.env.example" "$ROOT/frontend/.env"
   echo "Created frontend/.env"
 fi
 
+# Shared upload dir + public symlink for artisan serve
+mkdir -p "$ROOT/backend/uploads"
+if [[ ! -e "$ROOT/laravel/public/uploads" ]]; then
+  ln -sfn "$ROOT/backend/uploads" "$ROOT/laravel/public/uploads"
+fi
+
 if ! api_ready; then
-  echo "Seeding database (needs MongoDB)..."
+  echo "Seeding database (MySQL nmp_ticketing)..."
   (
-    cd "$ROOT/backend"
-    bun run seed
+    cd "$ROOT/laravel"
+    php artisan nmp:seed
   ) || {
     echo ""
-    echo "ERROR: Seed failed. Start MongoDB first, then run: bun run start"
+    echo "ERROR: Seed failed. Start MySQL first, then re-run this script."
     exit 1
   }
 
-  echo "Starting backend..."
+  echo "Starting Laravel API on :4000..."
   (
-    cd "$ROOT/backend"
-    echo "BACKEND - keep this process running"
-    bun run dev
+    cd "$ROOT/laravel"
+    echo "LARAVEL - keep this process running"
+    php artisan serve --host=0.0.0.0 --port=4000
   ) &
-  BACKEND_PID=$!
+  LARAVEL_PID=$!
 
   echo "Waiting for API on port 4000..."
   ready=false
@@ -67,12 +83,43 @@ if ! api_ready; then
     fi
   done
   if [[ "$ready" != true ]]; then
-    echo "ERROR: API did not start. Check MongoDB and the backend logs."
+    echo "ERROR: API did not start. Check MySQL and Laravel logs."
     exit 1
   fi
-  echo "API ready: http://on-prem.x-dcb.net:4000/api/health"
+  echo "API ready: http://127.0.0.1:4000/api/health"
 else
-  echo "API already running: http://on-prem.x-dcb.net:4000"
+  echo "API already running: http://127.0.0.1:4000"
+fi
+
+if [[ -f "$ROOT/backend/src/realtime-server.ts" ]]; then
+  if ! realtime_ready; then
+    echo "Starting realtime sidecar on :4001..."
+    (
+      cd "$ROOT/backend"
+      # Load JWT from laravel/.env when unset (HS256 needs >= 32 bytes for php-jwt)
+      if [[ -z "${JWT_SECRET:-}" ]] && [[ -f "$ROOT/laravel/.env" ]]; then
+        JWT_SECRET="$(grep -E '^JWT_SECRET=' "$ROOT/laravel/.env" | head -1 | cut -d= -f2-)"
+      fi
+      export JWT_SECRET="${JWT_SECRET:-change-me-in-production-nmp-ticketing}"
+      export REALTIME_INTERNAL_SECRET="${REALTIME_INTERNAL_SECRET:-$JWT_SECRET}"
+      export MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
+      export MYSQL_USER="${MYSQL_USER:-root}"
+      export MYSQL_PASSWORD="${MYSQL_PASSWORD:-2026nmpict}"
+      export MYSQL_DATABASE="${MYSQL_DATABASE:-nmp_ticketing}"
+      echo "REALTIME - keep this process running"
+      bun src/realtime-server.ts
+    ) &
+    REALTIME_PID=$!
+    for _ in $(seq 1 20); do
+      sleep 1
+      if realtime_ready; then
+        echo "Realtime ready: http://127.0.0.1:4001/health"
+        break
+      fi
+    done
+  else
+    echo "Realtime already running: http://127.0.0.1:4001"
+  fi
 fi
 
 if ! frontend_ready "$FRONTEND_PORT"; then
@@ -102,17 +149,16 @@ fi
 
 echo ""
 echo "Open in browser:"
-echo "  http://on-prem.x-dcb.net:${FRONTEND_PORT}/"
-echo "  Sign in: http://on-prem.x-dcb.net:${FRONTEND_PORT}/login"
+echo "  http://127.0.0.1:${FRONTEND_PORT}/"
+echo "  Sign in: http://127.0.0.1:${FRONTEND_PORT}/login"
 echo "  Admin:   admin@nmp.gov.ph / admin123"
 echo "  Records: records@nmp.gov.ph / records123"
 echo "  Client:  user@nmp.gov.ph / user123"
 echo ""
-echo "Workflow: Admin submits form -> Records reviews (separate tab) -> Client submits request"
-echo "All three portals can stay logged in at the same time."
+echo "API:      http://127.0.0.1:4000/api/health"
+echo "Realtime: http://127.0.0.1:4001/health (socket.io)"
 echo ""
 echo "Press Ctrl+C to stop services started by this script."
 echo ""
 
-# Keep script alive while child processes run
 wait

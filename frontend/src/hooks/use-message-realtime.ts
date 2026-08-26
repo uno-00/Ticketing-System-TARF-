@@ -86,8 +86,18 @@ export function useMessageRealtime(slot: PortalSlot) {
       );
       qc.setQueryData(
         ["conversations", slot],
-        (old: { items: ConversationRecord[] } | undefined) =>
-          old ? { items: old.items } : old,
+        (old: { items: ConversationRecord[] } | undefined) => {
+          if (!old) return old;
+          return {
+            items:
+              patchConversations(old.items, {
+                conversationId: event.conversationId,
+                lastMessageAt: event.message.createdAt,
+                lastMessagePreview: event.message.body,
+                lastSenderName: event.message.senderName,
+              }) ?? old.items,
+          };
+        },
       );
 
       if (

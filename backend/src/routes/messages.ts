@@ -8,7 +8,7 @@ import { paramId } from "../utils/params.js";
 export const messagesRouter = Router();
 
 messagesRouter.use(requireAuth);
-messagesRouter.use(requireRoles("admin", "user", "record_management"));
+messagesRouter.use(requireRoles("admin", "user"));
 
 messagesRouter.get("/users", async (req, res, next) => {
   try {

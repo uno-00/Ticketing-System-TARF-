@@ -110,7 +110,7 @@ async function appendPdfFile(pdfDoc: PDFDocument, filePath: string) {
 }
 
 export async function generateFormPreviewPdf(formId: string) {
-  const form = await Form.findById(formId).populate("createdBy", "name email division").lean();
+  const form = await Form.findById(formId, { populate: "createdBy" });
   if (!form) throw new AppError(404, "Form not found");
 
   const fields = (form.fields ?? []) as FormField[];

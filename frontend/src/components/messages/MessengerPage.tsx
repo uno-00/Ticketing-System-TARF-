@@ -15,7 +15,11 @@ import { Input } from "@/components/ui/input";
 import { MessageBody } from "@/components/messages/MessageBody";
 import { MessageComposer } from "@/components/messages/MessageComposer";
 import { api } from "@/lib/api/client";
-import type { ConversationRecord, MessageableUser } from "@/lib/api/types";
+import type {
+  ConversationMessageRecord,
+  ConversationRecord,
+  MessageableUser,
+} from "@/lib/api/types";
 import { useAuth } from "@/lib/auth";
 import { groupUsersByRole, messageRoleLabel } from "@/lib/messages";
 import { joinConversationRoom } from "@/lib/message-socket";
@@ -137,10 +141,40 @@ export function MessengerPage({ slot, initialTicketId, initialConversationId }: 
 
   const send = useMutation({
     mutationFn: () => api.postConversationMessage(selectedId!, draft.trim(), slot, mentionIds),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setDraft("");
       setMentionIds([]);
-      void qc.invalidateQueries({ queryKey: ["conversations", slot] });
+      if (selectedId && data.message) {
+        const message = data.message as ConversationMessageRecord;
+        qc.setQueryData(
+          ["conversation-messages", selectedId, slot],
+          (old: { items: ConversationMessageRecord[] } | undefined) => {
+            const items = old?.items ?? [];
+            if (items.some((m) => m._id === message._id)) return { items };
+            return { items: [...items, message] };
+          },
+        );
+        qc.setQueryData(
+          ["conversations", slot],
+          (old: { items: ConversationRecord[] } | undefined) => {
+            if (!old) return old;
+            return {
+              items: old.items
+                .map((conv) =>
+                  conv._id === selectedId
+                    ? {
+                        ...conv,
+                        lastMessageAt: message.createdAt,
+                        lastMessagePreview: message.body,
+                        lastSenderName: message.senderName,
+                      }
+                    : conv,
+                )
+                .sort((a, b) => (b.lastMessageAt ?? "").localeCompare(a.lastMessageAt ?? "")),
+            };
+          },
+        );
+      }
       requestAnimationFrame(() => scrollToBottom("smooth"));
     },
     onError: (err: Error) => toast.error(err.message || "Could not send message"),
@@ -437,7 +471,7 @@ export function MessengerPage({ slot, initialTicketId, initialConversationId }: 
                     selected.isGlobal
                       ? "Message the NMP team…"
                       : selected.type === "ticket"
-                      ? "Message about this request… @ records, client, or assigned personnel"
+                      ? "Message about this request… @ TARF admin, client, or assigned personnel"
                         : `Message ${selected.title}…`
                   }
                 />
@@ -616,14 +650,6 @@ function NewChatDialog({
               <UserSection
                 title="Admin"
                 users={grouped.admin}
-                onSelect={onSelectUser}
-                onPoke={onPokeUser}
-                disabled={starting}
-                pokeDisabled={poking}
-              />
-              <UserSection
-                title="Records"
-                users={grouped.records}
                 onSelect={onSelectUser}
                 onPoke={onPokeUser}
                 disabled={starting}

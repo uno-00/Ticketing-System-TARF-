@@ -19,8 +19,5 @@ export async function logActivity(
 }
 
 export async function listRecentActivities(limit = 20) {
-  return ActivityLog.find()
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+  return ActivityLog.find({}, { sort: { createdAt: -1 }, limit });
 }

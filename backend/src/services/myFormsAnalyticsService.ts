@@ -1,7 +1,7 @@
-import { Types } from "mongoose";
+import type { RowDataPacket } from "mysql2";
 import type { AuthUser } from "../middleware/auth.js";
 import { Form } from "../models/Form.js";
-import { Ticket } from "../models/Ticket.js";
+import { query } from "../db.js";
 
 export type NamedCount = {
   name: string;
@@ -65,20 +65,29 @@ function monthBuckets(months = 12) {
 }
 
 function toNamedCounts(
-  rows: Array<{ _id: string; count: number }>,
+  rows: Array<{ name: string; count: number }>,
   total: number,
   limit = 8,
 ): NamedCount[] {
   return rows.slice(0, limit).map((row) => ({
-    name: row._id?.trim() || "Unspecified",
+    name: row.name?.trim() || "Unspecified",
     count: row.count,
     percent: total > 0 ? Math.round((row.count / total) * 1000) / 10 : 0,
   }));
 }
 
+function formIdPlaceholders(formIds: string[], params: Record<string, unknown>): string {
+  return formIds
+    .map((id, i) => {
+      params[`fid${i}`] = id;
+      return `:fid${i}`;
+    })
+    .join(", ");
+}
+
 export async function getMyFormsAnalytics(user: AuthUser): Promise<MyFormsAnalytics> {
-  const forms = await Form.find({ createdBy: user.id }).sort({ updatedAt: -1 }).lean();
-  const formIds = forms.map((f) => f._id as Types.ObjectId);
+  const forms = await Form.find({ createdBy: user.id }, { sort: { updatedAt: -1 } });
+  const formIds = forms.map((f) => f._id);
 
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -86,94 +95,157 @@ export async function getMyFormsAnalytics(user: AuthUser): Promise<MyFormsAnalyt
   const buckets = monthBuckets(12);
   const rangeStart = buckets[0]!.start;
 
-  const ticketMatch =
-    formIds.length > 0 ? { formId: { $in: formIds } } : { formId: { $in: [] } };
+  if (formIds.length === 0) {
+    const rangeLabel = `${thisMonthStart.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })} – ${now.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`;
+    return {
+      rangeLabel,
+      summary: {
+        totalRequests: 0,
+        totalRequestsChangePct: null,
+        totalDivisions: 0,
+        divisionsChangePct: null,
+        mostRequestedService: "—",
+        mostRequestedCount: 0,
+        mostRequestedPercent: 0,
+        requestsThisMonth: 0,
+        requestsThisMonthChangePct: null,
+      },
+      byDivision: [],
+      byService: [],
+      monthlyTrend: buckets.map((b) => ({ month: b.month, monthKey: b.monthKey, count: 0 })),
+      insights: {
+        mostActiveDivision: "—",
+        mostRequestedService: "—",
+        fastestGrowing: "—",
+        topSharePercent: 0,
+        averagePerDay: 0,
+      },
+      topDivisions: [],
+      forms: forms.map((f) => ({
+        _id: f._id,
+        title: f.title,
+        refNumber: f.refNumber,
+        status: f.status,
+        requestCount: 0,
+        lastSubmissionAt: null,
+        updatedAt: f.updatedAt.toISOString(),
+        reviewRemarks: f.reviewRemarks || undefined,
+      })),
+    };
+  }
+
+  const baseParams: Record<string, unknown> = {};
+  const inList = formIdPlaceholders(formIds, baseParams);
+  const formMatch = `form_id IN (${inList})`;
 
   const [
-    totalRequests,
-    thisMonthCount,
-    lastMonthCount,
+    totalRows,
+    thisMonthRows,
+    lastMonthRows,
     divisionRows,
     serviceRows,
     monthlyRows,
-    thisMonthDivCount,
-    lastMonthDivCount,
+    thisMonthDivRows,
+    lastMonthDivRows,
     ticketsByForm,
     lastSubmissions,
     thisMonthServices,
     lastMonthServices,
   ] = await Promise.all([
-    Ticket.countDocuments(ticketMatch),
-    Ticket.countDocuments({ ...ticketMatch, createdAt: { $gte: thisMonthStart } }),
-    Ticket.countDocuments({
-      ...ticketMatch,
-      createdAt: { $gte: lastMonthStart, $lt: thisMonthStart },
-    }),
-    Ticket.aggregate<{ _id: string; count: number }>([
-      { $match: ticketMatch },
-      { $group: { _id: { $ifNull: ["$division", "Unspecified"] }, count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]),
-    Ticket.aggregate<{ _id: string; count: number }>([
-      { $match: ticketMatch },
-      { $group: { _id: { $ifNull: ["$formTitle", "Other"] }, count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]),
-    Ticket.aggregate<{ _id: { year: number; month: number }; count: number }>([
-      { $match: { ...ticketMatch, createdAt: { $gte: rangeStart } } },
-      {
-        $group: {
-          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-          count: { $sum: 1 },
-        },
-      },
-    ]),
-    Ticket.aggregate<{ count: number }>([
-      { $match: { ...ticketMatch, createdAt: { $gte: thisMonthStart } } },
-      { $group: { _id: { $ifNull: ["$division", "Unspecified"] } } },
-      { $count: "count" },
-    ]),
-    Ticket.aggregate<{ count: number }>([
-      {
-        $match: {
-          ...ticketMatch,
-          createdAt: { $gte: lastMonthStart, $lt: thisMonthStart },
-        },
-      },
-      { $group: { _id: { $ifNull: ["$division", "Unspecified"] } } },
-      { $count: "count" },
-    ]),
-    Ticket.aggregate<{ _id: Types.ObjectId; count: number }>([
-      { $match: ticketMatch },
-      { $group: { _id: "$formId", count: { $sum: 1 } } },
-    ]),
-    Ticket.aggregate<{ _id: Types.ObjectId; lastAt: Date }>([
-      { $match: ticketMatch },
-      { $group: { _id: "$formId", lastAt: { $max: "$createdAt" } } },
-    ]),
-    Ticket.aggregate<{ _id: string; count: number }>([
-      { $match: { ...ticketMatch, createdAt: { $gte: thisMonthStart } } },
-      { $group: { _id: { $ifNull: ["$formTitle", "Other"] }, count: { $sum: 1 } } },
-    ]),
-    Ticket.aggregate<{ _id: string; count: number }>([
-      {
-        $match: {
-          ...ticketMatch,
-          createdAt: { $gte: lastMonthStart, $lt: thisMonthStart },
-        },
-      },
-      { $group: { _id: { $ifNull: ["$formTitle", "Other"] }, count: { $sum: 1 } } },
-    ]),
+    query<RowDataPacket[]>(`SELECT COUNT(*) AS cnt FROM tickets WHERE ${formMatch}`, baseParams),
+    query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS cnt FROM tickets WHERE ${formMatch} AND created_at >= :thisMonthStart`,
+      { ...baseParams, thisMonthStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS cnt FROM tickets WHERE ${formMatch} AND created_at >= :lastMonthStart AND created_at < :thisMonthStart`,
+      { ...baseParams, lastMonthStart, thisMonthStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COALESCE(NULLIF(TRIM(division), ''), 'Unspecified') AS name, COUNT(*) AS count
+       FROM tickets WHERE ${formMatch}
+       GROUP BY name ORDER BY count DESC`,
+      baseParams,
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COALESCE(NULLIF(TRIM(form_title), ''), 'Other') AS name, COUNT(*) AS count
+       FROM tickets WHERE ${formMatch}
+       GROUP BY name ORDER BY count DESC`,
+      baseParams,
+    ),
+    query<RowDataPacket[]>(
+      `SELECT YEAR(created_at) AS year, MONTH(created_at) AS month, COUNT(*) AS count
+       FROM tickets WHERE ${formMatch} AND created_at >= :rangeStart
+       GROUP BY YEAR(created_at), MONTH(created_at)`,
+      { ...baseParams, rangeStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS count FROM (
+         SELECT COALESCE(NULLIF(TRIM(division), ''), 'Unspecified') AS d
+         FROM tickets WHERE ${formMatch} AND created_at >= :thisMonthStart
+         GROUP BY d
+       ) x`,
+      { ...baseParams, thisMonthStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS count FROM (
+         SELECT COALESCE(NULLIF(TRIM(division), ''), 'Unspecified') AS d
+         FROM tickets WHERE ${formMatch} AND created_at >= :lastMonthStart AND created_at < :thisMonthStart
+         GROUP BY d
+       ) x`,
+      { ...baseParams, lastMonthStart, thisMonthStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT form_id AS id, COUNT(*) AS count FROM tickets WHERE ${formMatch} GROUP BY form_id`,
+      baseParams,
+    ),
+    query<RowDataPacket[]>(
+      `SELECT form_id AS id, MAX(created_at) AS lastAt FROM tickets WHERE ${formMatch} GROUP BY form_id`,
+      baseParams,
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COALESCE(NULLIF(TRIM(form_title), ''), 'Other') AS name, COUNT(*) AS count
+       FROM tickets WHERE ${formMatch} AND created_at >= :thisMonthStart
+       GROUP BY name`,
+      { ...baseParams, thisMonthStart },
+    ),
+    query<RowDataPacket[]>(
+      `SELECT COALESCE(NULLIF(TRIM(form_title), ''), 'Other') AS name, COUNT(*) AS count
+       FROM tickets WHERE ${formMatch} AND created_at >= :lastMonthStart AND created_at < :thisMonthStart
+       GROUP BY name`,
+      { ...baseParams, lastMonthStart, thisMonthStart },
+    ),
   ]);
 
-  const byDivision = toNamedCounts(divisionRows, totalRequests, 8);
-  const byService = toNamedCounts(serviceRows, totalRequests, 6);
-  const topDivisions = toNamedCounts(divisionRows, totalRequests, 5);
+  const totalRequests = Number(totalRows[0]?.cnt ?? 0);
+  const thisMonthCount = Number(thisMonthRows[0]?.cnt ?? 0);
+  const lastMonthCount = Number(lastMonthRows[0]?.cnt ?? 0);
+
+  const divisionNamed = divisionRows.map((r) => ({
+    name: String(r.name),
+    count: Number(r.count),
+  }));
+  const serviceNamed = serviceRows.map((r) => ({
+    name: String(r.name),
+    count: Number(r.count),
+  }));
+
+  const byDivision = toNamedCounts(divisionNamed, totalRequests, 8);
+  const byService = toNamedCounts(serviceNamed, totalRequests, 6);
+  const topDivisions = toNamedCounts(divisionNamed, totalRequests, 5);
 
   const monthlyMap = new Map(
     monthlyRows.map((row) => [
-      `${row._id.year}-${String(row._id.month).padStart(2, "0")}`,
-      row.count,
+      `${row.year}-${String(row.month).padStart(2, "0")}`,
+      Number(row.count),
     ]),
   );
   const monthlyTrend = buckets.map((b) => ({
@@ -182,23 +254,26 @@ export async function getMyFormsAnalytics(user: AuthUser): Promise<MyFormsAnalyt
     count: monthlyMap.get(b.monthKey) ?? 0,
   }));
 
-  const countByForm = new Map(ticketsByForm.map((r) => [String(r._id), r.count]));
-  const lastByForm = new Map(lastSubmissions.map((r) => [String(r._id), r.lastAt]));
+  const countByForm = new Map(ticketsByForm.map((r) => [String(r.id), Number(r.count)]));
+  const lastByForm = new Map(
+    lastSubmissions.map((r) => [String(r.id), r.lastAt ? new Date(r.lastAt as string | Date) : null]),
+  );
 
   const topService = byService[0];
   const topDivision = byDivision[0];
   const daysInMonth = Math.max(1, now.getDate());
   const averagePerDay = Math.round((thisMonthCount / daysInMonth) * 10) / 10;
 
-  const lastMap = new Map(lastMonthServices.map((r) => [r._id, r.count]));
+  const lastMap = new Map(lastMonthServices.map((r) => [String(r.name), Number(r.count)]));
   let fastestGrowing = topService?.name ?? "—";
   let bestGrowth = -Infinity;
   for (const row of thisMonthServices) {
-    const prev = lastMap.get(row._id) ?? 0;
-    const growth = row.count - prev;
+    const name = String(row.name);
+    const prev = lastMap.get(name) ?? 0;
+    const growth = Number(row.count) - prev;
     if (growth > bestGrowth) {
       bestGrowth = growth;
-      fastestGrowing = row._id || "—";
+      fastestGrowing = name || "—";
     }
   }
 
@@ -217,10 +292,10 @@ export async function getMyFormsAnalytics(user: AuthUser): Promise<MyFormsAnalyt
     summary: {
       totalRequests,
       totalRequestsChangePct: pctChange(thisMonthCount, lastMonthCount),
-      totalDivisions: divisionRows.length,
+      totalDivisions: divisionNamed.length,
       divisionsChangePct: pctChange(
-        thisMonthDivCount[0]?.count ?? 0,
-        lastMonthDivCount[0]?.count ?? 0,
+        Number(thisMonthDivRows[0]?.count ?? 0),
+        Number(lastMonthDivRows[0]?.count ?? 0),
       ),
       mostRequestedService: topService?.name ?? "—",
       mostRequestedCount: topService?.count ?? 0,
@@ -246,7 +321,7 @@ export async function getMyFormsAnalytics(user: AuthUser): Promise<MyFormsAnalyt
       status: f.status,
       requestCount: countByForm.get(String(f._id)) ?? 0,
       lastSubmissionAt: lastByForm.get(String(f._id))?.toISOString() ?? null,
-      updatedAt: (f.updatedAt as Date).toISOString(),
+      updatedAt: f.updatedAt.toISOString(),
       reviewRemarks: f.reviewRemarks || undefined,
     })),
   };

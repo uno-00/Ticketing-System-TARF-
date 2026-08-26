@@ -1,11 +1,8 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { BookOpen, Clock, History, LayoutDashboard, MessageCircle } from "lucide-react";
+import { BookOpen, Clock, History, LayoutDashboard } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { useMessageNotifications } from "@/hooks/use-message-notifications";
-import { useMessageRealtime } from "@/hooks/use-message-realtime";
-import { usePokeNotifications } from "@/hooks/use-poke-notifications";
 import { PortalGateCard } from "@/components/layout/workspace-ui";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
@@ -17,7 +14,6 @@ import {
   LOGIN,
   RECORDS_ACTIVITY,
   RECORDS_DASHBOARD,
-  RECORDS_MESSAGES,
   RECORDS_PENDING,
   RECORDS_PUBLISHED,
 } from "@/lib/navigation";
@@ -35,9 +31,6 @@ export const Route = createFileRoute("/records")({
 
 function RecordsLayout() {
   const { user, sessionReady, logout, canQuery } = useRecordsSession();
-  useMessageRealtime("records");
-  const pokeNotifications = usePokeNotifications("records", canQuery);
-  const messageNotifications = useMessageNotifications("records", canQuery);
 
   const {
     data,
@@ -46,24 +39,17 @@ function RecordsLayout() {
   } = useQuery({
     queryKey: ["records-dashboard"],
     queryFn: () => api.recordsDashboard(),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 15_000,
-    staleTime: 0,
     enabled: canQuery,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const pendingCount = canQuery && !isError ? data?.pendingCount : undefined;
   const notifications = useMemo(
     () =>
-      canQuery && !isError
-        ? [
-            ...messageNotifications,
-            ...pokeNotifications,
-            ...recordsPendingNotifications(data?.recentPending ?? []),
-          ]
-        : [...messageNotifications, ...pokeNotifications],
-    [canQuery, isError, messageNotifications, pokeNotifications, data?.recentPending],
+      canQuery && !isError ? recordsPendingNotifications(data?.recentPending ?? []) : [],
+    [canQuery, isError, data?.recentPending],
   );
 
   if (sessionReady && user && !isRecordsRole(user.role)) {
@@ -105,10 +91,6 @@ function RecordsLayout() {
             { to: RECORDS_PENDING, label: "Pending Forms", icon: Clock, badge: pendingCount },
             { to: RECORDS_PUBLISHED, label: "Published Forms", icon: BookOpen },
           ],
-        },
-        {
-          title: "REQUESTS",
-          items: [{ to: RECORDS_MESSAGES, label: "Messages", icon: MessageCircle }],
         },
         {
           title: "SYSTEM",

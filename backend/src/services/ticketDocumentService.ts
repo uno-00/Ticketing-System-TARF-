@@ -7,6 +7,7 @@ import { AppError } from "../utils/errors.js";
 import { embedTemplateWithPlacements, type Placement } from "./templateEmbedService.js";
 import { getTicketById } from "./ticketService.js";
 import { buildSubmissionValues, buildSubmissionImageValues, parsePlacementsFromTemplate, resolveAnswerForVariable, formatSubmissionValue, isImageAnswerValue } from "../utils/placementValues.js";
+import { mergeRequesterProfileIntoAnswers } from "../utils/profilePlacementFields.js";
 
 type FormField = {
   type: string;
@@ -80,7 +81,7 @@ export async function generateTicketDocumentPdf(ticketId: string) {
   const populatedForm =
     typeof ticket.formId === "object" && ticket.formId !== null && "fields" in ticket.formId
       ? ticket.formId
-      : await Form.findById(ticket.formId).lean();
+      : await Form.findById(String(ticket.formId));
   if (!populatedForm || Array.isArray(populatedForm)) {
     throw new AppError(404, "Form not found for this ticket");
   }
@@ -94,7 +95,14 @@ export async function generateTicketDocumentPdf(ticketId: string) {
   };
 
   const fields = formDoc.fields ?? [];
-  const answers = (ticket.answers ?? {}) as Record<string, unknown>;
+  const answers = mergeRequesterProfileIntoAnswers(
+    {
+      name: ticket.creatorName,
+      email: (ticket as { creatorEmail?: string }).creatorEmail,
+      division: ticket.division,
+    },
+    (ticket.answers ?? {}) as Record<string, unknown>,
+  );
   const placements = (formDoc.printPlacements?.length
     ? formDoc.printPlacements
     : parsePlacementsFromTemplate(

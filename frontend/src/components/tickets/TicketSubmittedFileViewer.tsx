@@ -34,8 +34,8 @@ function resolveFallbackFile(ticket: TicketRecord): string | null {
 }
 
 /**
- * Shows the form template with the client's actual submitted answers on saved placements.
- * PDF templates use server-merged document (same reliable approach as Records).
+ * Shows the client's submitted form with answers.
+ * Prefers server-filled PDF; falls back to template + overlay for image templates.
  */
 export function TicketSubmittedFileViewer({
   ticket,
@@ -56,27 +56,29 @@ export function TicketSubmittedFileViewer({
   const workProcedurePath = form?.workProcedurePath?.trim() ?? "";
   const hasWorkProcedure = Boolean(workProcedurePath && isPdfPath(workProcedurePath));
 
-  /** PDF iframe overlays are unreliable — burn answers into PDF on the server. */
-  const useMergedPdf = Boolean(
-    templateSrc && hasPlacements && filled && (isPdfTemplate || hasWorkProcedure),
-  );
+  /** Primary: server PDF with answers burned in. */
+  const useTicketDocument = Boolean(filled && ticket._id && (isPdfTemplate || hasWorkProcedure || !form));
+
+  /** Fallback overlay on image templates when not using server PDF. */
+  const useClientOverlay =
+    !useTicketDocument && Boolean(form && hasPlacements && filled && isImageTemplate);
 
   const blobLoader = useMemo(() => {
-    if (!useMergedPdf || !enabled) return undefined;
+    if (!useTicketDocument || !enabled) return undefined;
     return () => api.getTicketDocument(ticket._id, slot);
-  }, [ticket._id, useMergedPdf, enabled, slot]);
+  }, [ticket._id, useTicketDocument, enabled, slot]);
 
   const overlay = useMemo(() => {
-    if (!hasPlacements || !isImageTemplate || !form || !filled) return undefined;
+    if (!useClientOverlay || !form) return undefined;
     return buildPlacementOverlay(
       form.fields,
       placements,
       ticket.answers ?? {},
       resolveFormPlacementFontSize(form),
     );
-  }, [form, hasPlacements, isImageTemplate, filled, placements, ticket.answers]);
+  }, [useClientOverlay, form, placements, ticket.answers]);
 
-  const src = useMergedPdf ? null : (templateSrc ?? resolveFallbackFile(ticket));
+  const src = blobLoader ? null : (templateSrc ?? resolveFallbackFile(ticket));
 
   const alt =
     fileLabel?.trim() ||

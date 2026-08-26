@@ -124,7 +124,7 @@ function renderPlacementLayer(
 
   return (
     <div
-      className="print-template-canvas pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 h-full w-full"
       style={cssVars}
     >
       {markers}

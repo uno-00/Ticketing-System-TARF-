@@ -5,6 +5,8 @@ import type { TicketStatus } from "../constants.js";
 import { AppError } from "../utils/errors.js";
 import { generateTicketNumber } from "../utils/ticketNumber.js";
 import { normalizeTicketAnswers, resolveAnswerForVariable } from "../utils/placementValues.js";
+import { mergeRequesterProfileIntoAnswers } from "../utils/profilePlacementFields.js";
+import { idOf } from "../utils/ids.js";
 import * as formService from "./formService.js";
 import { logActivity } from "./activityService.js";
 
@@ -30,7 +32,15 @@ export async function createTicketFromClient(
     throw new AppError(400, "Only PDF attachments are allowed");
   }
 
-  const storedAnswers = normalizeTicketAnswers(form.fields, body.answers ?? {});
+  const mergedAnswers = mergeRequesterProfileIntoAnswers(
+    {
+      name: user.name,
+      email: user.email,
+      division: user.division,
+    },
+    body.answers ?? {},
+  );
+  const storedAnswers = normalizeTicketAnswers(form.fields, mergedAnswers);
 
   const formatAnswer = (field: { type: string; label: string; variable: string }, value: unknown) => {
     if (value === undefined || value === null || value === "") return "—";
@@ -84,7 +94,10 @@ export async function listTicketsForAdmin(query: {
 }) {
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(50, query.limit ?? 20);
-  const filter: Record<string, unknown> = {};
+  const filter: {
+    status?: TicketStatus;
+    $or?: Array<{ title?: RegExp; ticketNumber?: RegExp; creatorName?: RegExp }>;
+  } = {};
 
   if (query.status) filter.status = query.status;
   if (query.search?.trim()) {
@@ -96,12 +109,12 @@ export async function listTicketsForAdmin(query: {
   }
 
   const [items, total, pendingCount] = await Promise.all([
-    Ticket.find(filter)
-      .sort({ updatedAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("assignedTo", "name email division")
-      .lean(),
+    Ticket.find(filter, {
+      sort: { updatedAt: -1 },
+      skip: (page - 1) * limit,
+      limit,
+      populate: [{ path: "assignedTo", select: "name email division" }],
+    }),
     Ticket.countDocuments(filter),
     Ticket.countDocuments({ status: "pending_approval" }),
   ]);
@@ -110,21 +123,27 @@ export async function listTicketsForAdmin(query: {
 }
 
 export async function listTicketsForClient(userId: string) {
-  return Ticket.find({ creatorId: userId })
-    .sort({ createdAt: -1 })
-    .populate("assignedTo", "name email division")
-    .lean();
+  return Ticket.find(
+    { creatorId: userId },
+    {
+      sort: { createdAt: -1 },
+      populate: [{ path: "assignedTo", select: "name email division" }],
+    },
+  );
 }
 
 export async function getTicketById(id: string) {
-  const ticket = await Ticket.findById(id)
-    .populate("assignedTo", "name email division")
-    .populate("creatorId", "name email division")
-    .populate(
-      "formId",
-      "title refNumber fields printTemplate printTemplateImagePath printPlacements printPlacementFontSize workProcedurePath workProcedureName",
-    )
-    .lean();
+  const ticket = await Ticket.findById(id, {
+    populate: [
+      { path: "assignedTo", select: "name email division" },
+      { path: "creatorId", select: "name email division" },
+      {
+        path: "formId",
+        select:
+          "title refNumber fields printTemplate printTemplateImagePath printPlacements printPlacementFontSize workProcedurePath workProcedureName",
+      },
+    ],
+  });
   if (!ticket) throw new AppError(404, "Ticket not found");
   return ticket;
 }
@@ -200,7 +219,7 @@ export async function assignTicket(actor: AuthUser, id: string, assigneeIds: str
   const users = await User.find({ _id: { $in: assigneeIds }, role: "admin", active: true });
   if (users.length === 0) throw new AppError(400, "No valid personnel to assign");
 
-  ticket.assignedTo = assigneeIds as never;
+  ticket.assignedTo = assigneeIds;
   if (!["resolved", "closed"].includes(ticket.status)) {
     ticket.status = "in_progress";
   }
@@ -249,19 +268,22 @@ export async function updateTicketStatus(actor: AuthUser, id: string, status: Ti
 }
 
 export async function listTicketsAssignedToAdmin(userId: string) {
-  return Ticket.find({
-    assignedTo: userId,
-    status: { $in: ["open", "in_progress", "pending", "reopened"] },
-  })
-    .sort({ updatedAt: -1 })
-    .populate("assignedTo", "name email division")
-    .lean();
+  return Ticket.find(
+    {
+      assignedTo: userId,
+      status: { $in: ["open", "in_progress", "pending", "reopened"] },
+    },
+    {
+      sort: { updatedAt: -1 },
+      populate: [{ path: "assignedTo", select: "name email division" }],
+    },
+  );
 }
 
 export async function completeTicketService(actor: AuthUser, id: string) {
   const ticket = await Ticket.findById(id);
   if (!ticket) throw new AppError(404, "Ticket not found");
-  if (ticket.creatorId.toString() !== actor.id) {
+  if (idOf(ticket.creatorId) !== actor.id) {
     throw new AppError(403, "Only the client can mark this service complete");
   }
 
@@ -286,7 +308,7 @@ export async function completeTicketService(actor: AuthUser, id: string) {
 export async function clientConfirmResolution(user: AuthUser, id: string, satisfied: boolean) {
   const ticket = await Ticket.findById(id);
   if (!ticket) throw new AppError(404, "Ticket not found");
-  if (ticket.creatorId.toString() !== user.id) throw new AppError(403, "Not your request");
+  if (idOf(ticket.creatorId) !== user.id) throw new AppError(403, "Not your request");
   if (ticket.status !== "resolved") throw new AppError(400, "Ticket is not awaiting client action");
 
   if (satisfied) {
@@ -324,7 +346,7 @@ export async function submitFeedback(
 ) {
   const ticket = await Ticket.findById(id);
   if (!ticket) throw new AppError(404, "Ticket not found");
-  if (ticket.creatorId.toString() !== user.id) throw new AppError(403, "Not your request");
+  if (idOf(ticket.creatorId) !== user.id) throw new AppError(403, "Not your request");
   if (ticket.status !== "resolved") {
     throw new AppError(400, "Mark the service complete before submitting feedback");
   }
@@ -351,8 +373,8 @@ export async function submitFeedback(
 }
 
 export async function listAssignees() {
-  return User.find({ role: "admin", active: true })
-    .select("name email division role")
-    .sort({ name: 1 })
-    .lean();
+  return User.find(
+    { role: "admin", active: true },
+    { sort: { name: 1 } },
+  );
 }

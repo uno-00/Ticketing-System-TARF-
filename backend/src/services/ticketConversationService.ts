@@ -1,16 +1,17 @@
-import mongoose from "mongoose";
 import type { AuthUser } from "../middleware/auth.js";
 import { Conversation } from "../models/Conversation.js";
 import { ConversationMessage } from "../models/ConversationMessage.js";
+import { Form } from "../models/Form.js";
 import { Ticket } from "../models/Ticket.js";
 import { User } from "../models/User.js";
 import { emitConversationUpdate, emitNewMessage, refreshUserConversationRooms } from "../realtime/socket.js";
 import { AppError } from "../utils/errors.js";
+import { SYSTEM_USER_ID, idOf } from "../utils/ids.js";
 
 async function postTicketThreadSystemMessage(conversationId: string, body: string) {
   const message = await ConversationMessage.create({
     conversationId,
-    senderId: new mongoose.Types.ObjectId("000000000000000000000000"),
+    senderId: SYSTEM_USER_ID,
     senderName: "System",
     senderRole: "admin",
     body,
@@ -54,29 +55,34 @@ function uniqueIds(ids: string[]) {
   return [...new Set(ids.filter(Boolean))];
 }
 
-async function getActiveRecordsUserIds(): Promise<string[]> {
-  const users = await User.find({ active: true, role: "record_management" })
-    .select("_id")
-    .lean();
-  return users.map((u) => u._id.toString());
+async function getFormCreatorId(ticket: { formId: unknown }): Promise<string | null> {
+  const formId = idOf(ticket.formId);
+  if (!formId) return null;
+  const form = await Form.findById(formId);
+  if (!form?.createdBy) return null;
+  return idOf(form.createdBy);
 }
 
+/** Request thread: TARF admin (form creator) + client + assigned personnel. Never Records. */
 async function buildTicketParticipantIds(ticket: {
-  creatorId: { toString(): string };
-  assignedTo: Array<{ toString(): string }>;
+  creatorId: unknown;
+  assignedTo: unknown[];
+  formId: unknown;
 }) {
-  return uniqueIds([
-    ticket.creatorId.toString(),
-    ...ticket.assignedTo.map((id) => id.toString()),
-    ...(await getActiveRecordsUserIds()),
-  ]);
+  const formCreatorId = await getFormCreatorId(ticket);
+  const ids = [
+    idOf(ticket.creatorId),
+    ...ticket.assignedTo.map((id) => idOf(id)),
+  ];
+  if (formCreatorId) ids.push(formCreatorId);
+  return uniqueIds(ids);
 }
 
 export async function ensureTicketConversation(ticketId: string) {
   let conv = await Conversation.findOne({ ticketId });
   if (conv) return conv;
 
-  const ticket = await Ticket.findById(ticketId).lean();
+  const ticket = await Ticket.findById(ticketId);
   if (!ticket) throw new AppError(404, "Ticket not found");
 
   const participantIds = await buildTicketParticipantIds(ticket);
@@ -92,7 +98,7 @@ export async function ensureTicketConversation(ticketId: string) {
 }
 
 export async function syncTicketConversationParticipants(ticketId: string) {
-  const ticket = await Ticket.findById(ticketId).lean();
+  const ticket = await Ticket.findById(ticketId);
   if (!ticket) return null;
 
   const conv = await ensureTicketConversation(ticketId);
@@ -101,22 +107,21 @@ export async function syncTicketConversationParticipants(ticketId: string) {
   const previous = new Set(conv.participantIds.map((id) => id.toString()));
   const added = nextParticipants.filter((id) => !previous.has(id));
 
-  conv.participantIds = nextParticipants as never;
+  conv.participantIds = nextParticipants;
   conv.title = ticket.ticketNumber;
   await conv.save();
 
-  const recordsIds = await getActiveRecordsUserIds();
-  for (const userId of uniqueIds([...added, ...nextParticipants, ...recordsIds])) {
+  for (const userId of uniqueIds([...added, ...nextParticipants])) {
     await refreshUserConversationRooms(userId);
   }
 
   if (added.length > 0) {
-    const assignedIdSet = new Set(ticket.assignedTo.map((id) => id.toString()));
+    const assignedIdSet = new Set(
+      (Array.isArray(ticket.assignedTo) ? ticket.assignedTo : []).map((id) => idOf(id)),
+    );
     const addedAssigneeIds = added.filter((id) => assignedIdSet.has(id));
     if (addedAssigneeIds.length > 0) {
-      const addedUsers = await User.find({ _id: { $in: addedAssigneeIds }, active: true })
-        .select("name")
-        .lean();
+      const addedUsers = await User.find({ _id: { $in: addedAssigneeIds }, active: true });
       if (addedUsers.length > 0) {
         await postTicketThreadSystemMessage(
           conv._id.toString(),
@@ -155,7 +160,7 @@ export async function setTicketConversationClosedState(ticketId: string, closed:
 
 export async function getTicketConversationForUser(user: AuthUser, ticketId: string) {
   await syncTicketConversationParticipants(ticketId);
-  const conv = await Conversation.findOne({ ticketId }).lean();
+  const conv = await Conversation.findOne({ ticketId });
   if (!conv) throw new AppError(404, "Conversation not found");
   if (conv.isClosed) throw new AppError(404, "Conversation is closed");
 
@@ -166,26 +171,33 @@ export async function getTicketConversationForUser(user: AuthUser, ticketId: str
 }
 
 export async function getTicketThreadMentionableUserIds(ticketId: string): Promise<string[]> {
-  const ticket = await Ticket.findById(ticketId).select("creatorId assignedTo").lean();
+  const ticket = await Ticket.findById(ticketId);
   if (!ticket) return [];
 
   return buildTicketParticipantIds(ticket);
 }
 
-export async function canAccessTicketConversation(
-  user: AuthUser,
-  ticketId: string,
-) {
-  const ticket = await Ticket.findById(ticketId).select("creatorId assignedTo").lean();
+export async function canAccessTicketConversation(user: AuthUser, ticketId: string) {
+  const ticket = await Ticket.findById(ticketId);
   if (!ticket) return false;
 
   if (user.role === "record_management") {
+    return false;
+  }
+
+  if (idOf(ticket.creatorId) === user.id) {
     return true;
   }
 
-  if (ticket.creatorId.toString() === user.id) {
+  const assigned = Array.isArray(ticket.assignedTo) ? ticket.assignedTo : [];
+  if (assigned.some((id) => idOf(id) === user.id)) {
     return true;
   }
 
-  return ticket.assignedTo.some((id) => id.toString() === user.id);
+  if (user.role === "admin") {
+    const formCreatorId = await getFormCreatorId(ticket);
+    return formCreatorId === user.id;
+  }
+
+  return false;
 }

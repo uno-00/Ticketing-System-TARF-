@@ -10,6 +10,7 @@ import {
   type RealtimeMentionPayload,
 } from "../realtime/socket.js";
 import { AppError } from "../utils/errors.js";
+import { idOf } from "../utils/ids.js";
 import {
   canAccessTicketConversation,
   getTicketThreadMentionableUserIds,
@@ -108,7 +109,7 @@ async function getMentionableUserIds(conversation: {
 }) {
   if (conversation.isClosed) return [];
   if (conversation.isGlobal) {
-    const users = await User.find({ active: true }).select("_id").lean();
+    const users = await User.find({ active: true });
     return users.map((u) => u._id.toString());
   }
 
@@ -122,12 +123,17 @@ async function getMentionableUserIds(conversation: {
 }
 
 export async function listMessageableUsers(user: AuthUser) {
-  const users = await User.find({ active: true, _id: { $ne: user.id } })
-    .select("name email role division")
-    .sort({ role: 1, name: 1 })
-    .lean();
+  const filter: { active: boolean; _id: { $ne: string }; role?: { $ne: string } } = {
+    active: true,
+    _id: { $ne: user.id },
+  };
+  // Admin/client messaging does not include Records users.
+  if (user.role !== "record_management") {
+    filter.role = { $ne: "record_management" };
+  }
 
-  return users.map((u) => serializeUser(u as never));
+  const users = await User.find(filter, { sort: { role: 1, name: 1 } });
+  return users.map((u) => serializeUser(u));
 }
 
 export async function listMentionableUsers(user: AuthUser, conversationId: string) {
@@ -136,15 +142,15 @@ export async function listMentionableUsers(user: AuthUser, conversationId: strin
   await assertConversationAccess(user, conversation);
 
   const ids = await getMentionableUserIds(conversation);
-  const users = await User.find({
-    _id: { $in: ids.filter((id) => id !== user.id) },
-    active: true,
-  })
-    .select("name email role division")
-    .sort({ name: 1 })
-    .lean();
+  const users = await User.find(
+    {
+      _id: { $in: ids.filter((id) => id !== user.id) },
+      active: true,
+    },
+    { sort: { name: 1 } },
+  );
 
-  return users.map((u) => serializeUser(u as never));
+  return users.map((u) => serializeUser(u));
 }
 
 export async function listConversations(user: AuthUser) {
@@ -154,46 +160,50 @@ export async function listConversations(user: AuthUser) {
     const myTickets = await Ticket.find({
       creatorId: user.id,
       status: { $nin: ["rejected"] },
-    })
-      .select("_id")
-      .lean();
+    });
     await Promise.all(myTickets.map((t) => syncTicketConversationParticipants(t._id.toString())));
   } else if (user.role === "record_management") {
-    const recentTickets = await Ticket.find({ status: { $nin: ["rejected"] } })
-      .sort({ updatedAt: -1 })
-      .limit(80)
-      .select("_id")
-      .lean();
-    await Promise.all(
-      recentTickets.map((t) => syncTicketConversationParticipants(t._id.toString())),
-    );
+    // Records does not participate in request message threads.
+  } else if (user.role === "admin") {
+    // Sync threads for forms this admin created.
+    const formIds = await (
+      await import("../models/Form.js")
+    ).Form.find({ createdBy: user.id });
+    if (formIds.length) {
+      const creatorTickets = await Ticket.find({
+        formId: { $in: formIds.map((f) => f._id) },
+        status: { $nin: ["rejected"] },
+      });
+      await Promise.all(
+        creatorTickets.map((t) => syncTicketConversationParticipants(t._id.toString())),
+      );
+    }
   }
 
   const assignedTickets = await Ticket.find({
     assignedTo: user.id,
     status: { $nin: ["rejected"] },
-  })
-    .select("_id")
-    .lean();
+  });
   await Promise.all(
     assignedTickets.map((t) => syncTicketConversationParticipants(t._id.toString())),
   );
 
-  const conversations = await Conversation.find({
-    $or: [{ isGlobal: true }, { participantIds: user.id }],
-  })
-    .sort({ isGlobal: -1, lastMessageAt: -1, updatedAt: -1 })
-    .lean();
+  const conversations = await Conversation.find(
+    {
+      $or: [{ isGlobal: true }, { participantIds: user.id }],
+    },
+    { sort: { isGlobal: -1, lastMessageAt: -1, updatedAt: -1 } },
+  );
 
   const ticketIds = conversations
     .filter((c) => c.ticketId)
     .map((c) => c.ticketId!.toString());
 
   const tickets = ticketIds.length
-    ? await Ticket.find({ _id: { $in: ticketIds } })
-        .select("ticketNumber title creatorName creatorId division status assignedTo")
-        .populate("assignedTo", "name")
-        .lean()
+    ? await Ticket.find(
+        { _id: { $in: ticketIds } },
+        { populate: [{ path: "assignedTo", select: "name" }] },
+      )
     : [];
   const ticketMap = new Map(tickets.map((t) => [t._id.toString(), t]));
 
@@ -203,9 +213,11 @@ export async function listConversations(user: AuthUser) {
           if (conv.isClosed) return false;
           if (!conv.ticketId) return true;
           const ticket = ticketMap.get(conv.ticketId.toString());
-          return ticket?.creatorId?.toString() === user.id;
+          return idOf(ticket?.creatorId) === user.id;
         })
-      : conversations.filter((conv) => !conv.isClosed);
+      : user.role === "record_management"
+        ? conversations.filter((conv) => !conv.isClosed && !conv.ticketId)
+        : conversations.filter((conv) => !conv.isClosed);
 
   const otherUserIds = new Set<string>();
   for (const conv of visibleConversations) {
@@ -219,10 +231,8 @@ export async function listConversations(user: AuthUser) {
 
   const others = otherUserIds.size
     ? await User.find({ _id: { $in: [...otherUserIds] } })
-        .select("name email role division")
-        .lean()
     : [];
-  const otherMap = new Map(others.map((u) => [u._id.toString(), serializeUser(u as never)]));
+  const otherMap = new Map(others.map((u) => [u._id.toString(), serializeUser(u)]));
 
   return visibleConversations.map((conv) => {
     const base = {
@@ -250,7 +260,7 @@ export async function listConversations(user: AuthUser) {
         subtitle: ticket
           ? `Client: ${ticket.creatorName} · Assigned: ${assignees.length ? assignees.map((a) => a.name).join(", ") : "Awaiting assignment"}`
           : "Request thread",
-        threadParticipants: "Records, client & assigned personnel",
+        threadParticipants: "TARF admin, client & assigned personnel",
         ticketStatus: ticket?.status ?? null,
         ticketTitle: ticket?.title ?? "",
       };
@@ -289,7 +299,7 @@ export async function getOrCreateDirectConversation(user: AuthUser, otherUserId:
     });
   }
 
-  const otherUser = serializeUser(other as never);
+  const otherUser = serializeUser(other);
   return {
     conversation: {
       _id: conv._id.toString(),
@@ -305,15 +315,14 @@ export async function getOrCreateDirectConversation(user: AuthUser, otherUserId:
 
 export async function getTicketConversation(user: AuthUser, ticketId: string) {
   await syncTicketConversationParticipants(ticketId);
-  const conv = await Conversation.findOne({ ticketId }).lean();
+  const conv = await Conversation.findOne({ ticketId });
   if (!conv) throw new AppError(404, "Conversation not found");
   if (conv.isClosed) throw new AppError(404, "Conversation is closed");
   await assertConversationAccess(user, conv);
 
-  const ticket = await Ticket.findById(ticketId)
-    .select("ticketNumber title creatorName status assignedTo")
-    .populate("assignedTo", "name")
-    .lean();
+  const ticket = await Ticket.findById(ticketId, {
+    populate: [{ path: "assignedTo", select: "name" }],
+  });
 
   const assignees = (ticket?.assignedTo as Array<{ name: string }> | undefined) ?? [];
 
@@ -325,7 +334,7 @@ export async function getTicketConversation(user: AuthUser, ticketId: string) {
       subtitle: ticket
         ? `Client: ${ticket.creatorName} · Assigned: ${assignees.length ? assignees.map((a) => a.name).join(", ") : "Awaiting assignment"}`
         : "Request thread",
-      threadParticipants: "Records, client & assigned personnel",
+      threadParticipants: "TARF admin, client & assigned personnel",
       isGlobal: false,
       ticketId,
       ticketStatus: ticket?.status ?? null,
@@ -339,11 +348,12 @@ export async function listConversationMessages(user: AuthUser, conversationId: s
   if (!conversation) throw new AppError(404, "Conversation not found");
   await assertConversationAccess(user, conversation);
 
-  const messages = await ConversationMessage.find({ conversationId })
-    .sort({ createdAt: 1 })
-    .lean();
+  const messages = await ConversationMessage.find(
+    { conversationId },
+    { sort: { createdAt: 1 } },
+  );
 
-  return messages.map((m) => serializeMessage(m as never));
+  return messages.map((m) => serializeMessage(m));
 }
 
 export async function postConversationMessage(
@@ -367,7 +377,7 @@ export async function postConversationMessage(
   );
 
   const mentionUsers = validMentionIds.length
-    ? await User.find({ _id: { $in: validMentionIds } }).select("name").lean()
+    ? await User.find({ _id: { $in: validMentionIds } })
     : [];
 
   const mentions = mentionUsers.map((u) => ({

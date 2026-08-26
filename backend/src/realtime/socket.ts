@@ -77,9 +77,7 @@ async function joinUserConversationRooms(
 ) {
   const conversations = await Conversation.find({
     $or: [{ isGlobal: true }, { participantIds: user.id }],
-  })
-    .select("_id isGlobal ticketId participantIds")
-    .lean();
+  });
 
   for (const conv of conversations) {
     if (conv.ticketId) {
@@ -117,7 +115,7 @@ export function initRealtime(server: HttpServer) {
 
     socket.on("join:conversation", async (conversationId: string) => {
       if (!conversationId) return;
-      const conv = await Conversation.findById(conversationId).lean();
+      const conv = await Conversation.findById(conversationId);
       if (!conv) return;
       if (conv.isGlobal) {
         socket.join(`conv:${conversationId}`);
@@ -137,9 +135,27 @@ export function initRealtime(server: HttpServer) {
   return io;
 }
 
-export function emitNewMessage(payload: RealtimeMessagePayload) {
+export async function emitNewMessage(payload: RealtimeMessagePayload) {
   if (!io) return;
   io.to(`conv:${payload.conversationId}`).emit("message:new", payload);
+
+  // Also push to every participant's personal room so open chats update even
+  // when conversation-room membership is still catching up.
+  try {
+    const conv = await Conversation.findById(payload.conversationId);
+    if (!conv) return;
+    if (conv.isGlobal) {
+      io.emit("message:new", payload);
+      return;
+    }
+    for (const id of conv.participantIds ?? []) {
+      io.to(`user:${id.toString()}`).emit("message:new", payload);
+    }
+  } catch {
+    if (payload.message.senderId) {
+      io.to(`user:${payload.message.senderId}`).emit("message:new", payload);
+    }
+  }
 }
 
 export function emitConversationUpdate(payload: RealtimeConversationPayload) {
@@ -159,7 +175,7 @@ export function emitMention(targetUserId: string, payload: RealtimeMentionPayloa
 
 export async function refreshUserConversationRooms(userId: string) {
   if (!io) return;
-  const user = await User.findById(userId).lean();
+  const user = await User.findById(userId);
   if (!user) return;
 
   const authUser: AuthUser = {

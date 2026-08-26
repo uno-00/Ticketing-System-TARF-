@@ -3,7 +3,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isImagePath, isPdfPath, resolveMediaUrl } from "@/lib/media-url";
-import { getPdfDisplayHeight } from "@/lib/pdf-template";
+import {
+  pdfBlobAllPagesToDataUrls,
+  pdfBlobFirstPageToDataUrl,
+} from "@/lib/pdf-template";
 import { cn } from "@/lib/utils";
 
 const MIN_ZOOM = 0.5;
@@ -245,21 +248,18 @@ function PdfEmbedDocument({
   overlay?: ReactNode;
   viewportClassName?: string;
 }) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [frameHeight, setFrameHeight] = useState(960);
+  const [pageImageUrls, setPageImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const showMappedOverlay = Boolean(overlay);
 
   useEffect(() => {
     let cancelled = false;
-    let objectUrl: string | null = null;
 
     async function load() {
       setLoading(true);
       setError(null);
-      setBlobUrl(null);
-      setPdfBlob(null);
+      setPageImageUrls([]);
 
       try {
         const resolved = src ? resolveMediaUrl(src) : null;
@@ -267,11 +267,15 @@ function PdfEmbedDocument({
           throw new Error("No document source.");
         }
         const blob = await loadDocumentBlob(resolved ?? "", blobLoader);
-        objectUrl = URL.createObjectURL(blob);
-        if (!cancelled) {
-          setPdfBlob(blob);
-          setBlobUrl(objectUrl);
+
+        if (showMappedOverlay) {
+          const { dataUrl } = await pdfBlobFirstPageToDataUrl(blob, { maxWidth: 1600 });
+          if (!cancelled) setPageImageUrls([dataUrl]);
+          return;
         }
+
+        const { dataUrls } = await pdfBlobAllPagesToDataUrls(blob, { maxWidth: 1600 });
+        if (!cancelled) setPageImageUrls(dataUrls);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Could not load document.");
@@ -285,39 +289,16 @@ function PdfEmbedDocument({
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [src, blobLoader]);
+  }, [src, blobLoader, showMappedOverlay]);
 
   const displayWidth = Math.round(baseWidth * zoom);
 
-  useEffect(() => {
-    if (!pdfBlob || displayWidth <= 0) return;
-    let cancelled = false;
-
-    void getPdfDisplayHeight(pdfBlob, displayWidth)
-      .then((height) => {
-        if (!cancelled) setFrameHeight(Math.max(height, 480));
-      })
-      .catch(() => {
-        if (!cancelled) setFrameHeight(Math.round(displayWidth * (11 / 8.5)));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pdfBlob, displayWidth]);
-
   if (loading) return <LoadingState />;
   if (error) {
-    return (
-      <EmptyState
-        title="Could not load document"
-        description={error}
-      />
-    );
+    return <EmptyState title="Could not load document" description={error} />;
   }
-  if (!blobUrl) return null;
+  if (pageImageUrls.length === 0) return null;
 
   return (
     <DocumentViewport
@@ -325,18 +306,23 @@ function PdfEmbedDocument({
       fillHeight={fillHeight}
       viewportClassName={viewportClassName}
     >
-      <div className="mx-auto" style={{ width: displayWidth, maxWidth: "100%" }}>
-        <div className="relative overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-border/80">
-          <iframe
-            src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-            title={alt}
-            className={cn("block w-full border-0 bg-white", overlay && "pointer-events-none")}
-            style={{ height: frameHeight, minHeight: frameHeight }}
-          />
-          {overlay ? (
-            <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>
-          ) : null}
-        </div>
+      <div className="mx-auto space-y-4" style={{ width: displayWidth, maxWidth: "100%" }}>
+        {pageImageUrls.map((pageImageUrl, index) => (
+          <div
+            key={`${index}-${pageImageUrl.slice(22, 64)}`}
+            className="relative overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-border/80"
+          >
+            <img
+              src={pageImageUrl}
+              alt={pageImageUrls.length > 1 ? `${alt} (page ${index + 1})` : alt}
+              className="block h-auto w-full select-none"
+              draggable={false}
+            />
+            {showMappedOverlay && index === 0 && overlay ? (
+              <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>
+            ) : null}
+          </div>
+        ))}
       </div>
     </DocumentViewport>
   );

@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { connectDb } from "../db.js";
+import { connectDb, closeDb } from "../db.js";
 import { User } from "../models/User.js";
 import { Form } from "../models/Form.js";
 import { generateFormRef } from "../utils/ticketNumber.js";
@@ -54,14 +54,17 @@ async function seed() {
       await user.save();
       console.log(`Updated: ${account.email} (${account.role})`);
     } else {
-      user = await User.create({ ...account, passwordHash });
+      user = await User.create({
+        email: account.email,
+        passwordHash,
+        name: account.name,
+        role: account.role,
+        division: account.division,
+      });
       console.log(`Created: ${account.email} (${account.role})`);
     }
     if (account.role === "admin") adminUser = user;
   }
-
-  // Migrate old "live" forms to "published"
-  await Form.updateMany({ status: "live" }, { status: "published" });
 
   const publishedExists = await Form.findOne({ status: "published" });
   if (!publishedExists && adminUser) {
@@ -89,10 +92,12 @@ async function seed() {
   }
 
   console.log("Seed complete");
+  await closeDb();
   process.exit(0);
 }
 
-seed().catch((e) => {
+seed().catch(async (e) => {
   console.error(e);
+  await closeDb().catch(() => undefined);
   process.exit(1);
 });

@@ -25,7 +25,8 @@ async function requireForm(id: string) {
 export async function createForm(user: AuthUser, body: Record<string, unknown>) {
   const form = await Form.create({
     ...normalizeFormBody(body),
-    refNumber: body.refNumber ?? generateFormRef(),
+    title: String(body.title ?? ""),
+    refNumber: (body.refNumber as string | undefined) ?? generateFormRef(),
     status: "draft",
     createdBy: user.id,
     updatedBy: user.id,
@@ -50,11 +51,11 @@ export async function updateForm(user: AuthUser, formId: string, body: Record<st
 }
 
 export async function listMyForms(user: AuthUser) {
-  return Form.find({ createdBy: user.id }).sort({ updatedAt: -1 }).lean();
+  return Form.find({ createdBy: user.id }, { sort: { updatedAt: -1 } });
 }
 
 export async function getFormById(id: string) {
-  const form = await Form.findById(id).populate("createdBy", "name email division").lean();
+  const form = await Form.findById(id, { populate: "createdBy" });
   if (!form) throw new AppError(404, "Form not found");
   return withNormalizedFields(form);
 }
@@ -79,7 +80,7 @@ export async function submitFormForReview(user: AuthUser, formId: string) {
   form.status = "pending_review";
   form.submittedForReviewAt = new Date();
   form.reviewRemarks = "";
-  form.updatedBy = user.id as never;
+  form.updatedBy = user.id;
   await form.save();
 
   await logActivity(user, {
@@ -99,7 +100,10 @@ export async function listFormsForRecords(query: {
 }) {
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(50, query.limit ?? 20);
-  const filter: Record<string, unknown> = {};
+  const filter: {
+    status?: string | { $in: string[] };
+    $or?: Array<{ title?: RegExp; department?: RegExp }>;
+  } = {};
 
   if (query.status) filter.status = query.status;
   else filter.status = { $in: ["pending_review", "published", "disapproved"] };
@@ -112,12 +116,12 @@ export async function listFormsForRecords(query: {
   }
 
   const [items, total, pendingCount] = await Promise.all([
-    Form.find(filter)
-      .sort({ updatedAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("createdBy", "name email division")
-      .lean(),
+    Form.find(filter, {
+      sort: { updatedAt: -1 },
+      skip: (page - 1) * limit,
+      limit,
+      populate: "createdBy",
+    }),
     Form.countDocuments(filter),
     Form.countDocuments({ status: "pending_review" }),
   ]);
@@ -164,7 +168,6 @@ export async function reviewForm(
         updatedBy: reviewer.id,
       },
     },
-    { new: true },
   );
 
   if (!form) {
@@ -190,12 +193,12 @@ export async function reviewForm(
 }
 
 export async function listPublishedForms() {
-  const items = await Form.find({ status: "published" }).sort({ updatedAt: -1 }).lean();
+  const items = await Form.find({ status: "published" }, { sort: { updatedAt: -1 } });
   return items.map((form) => withNormalizedFields(form));
 }
 
 export async function getPublishedForm(id: string) {
-  const form = await Form.findOne({ _id: id, status: "published" }).lean();
+  const form = await Form.findOne({ _id: id, status: "published" });
   if (!form) throw new AppError(404, "Published form not found");
   return withNormalizedFields(form);
 }

@@ -23,7 +23,7 @@ bun run setup
 bun run start
 ```
 
-Requires MongoDB running locally and [Bun](https://bun.sh).
+Requires MySQL running locally and [Bun](https://bun.sh).
 
 ## Seed accounts
 

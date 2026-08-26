@@ -47,3 +47,41 @@ export async function pdfFirstPageToDataUrl(
   await page.render({ canvas, canvasContext: ctx, viewport }).promise;
   return { dataUrl: canvas.toDataURL("image/png"), pageCount: doc.numPages };
 }
+
+/** Renders the first page of a PDF blob to a PNG data URL for overlay previews. */
+export async function pdfBlobFirstPageToDataUrl(
+  blob: Blob,
+  options?: { maxWidth?: number },
+): Promise<{ dataUrl: string; pageCount: number }> {
+  const file = new File([blob], "document.pdf", { type: blob.type || "application/pdf" });
+  return pdfFirstPageToDataUrl(file, options);
+}
+
+/** Renders every page of a PDF blob to PNG data URLs (filled ticket docs). */
+export async function pdfBlobAllPagesToDataUrls(
+  blob: Blob,
+  options?: { maxWidth?: number },
+): Promise<{ dataUrls: string[]; pageCount: number }> {
+  const maxWidth = options?.maxWidth ?? 1600;
+  const data = new Uint8Array(await blob.arrayBuffer());
+  const doc = await pdfjs.getDocument({ data }).promise;
+  const dataUrls: string[] = [];
+
+  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(2, maxWidth / baseViewport.width);
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not create canvas for PDF rendering.");
+
+    await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+    dataUrls.push(canvas.toDataURL("image/png"));
+  }
+
+  return { dataUrls, pageCount: doc.numPages };
+}

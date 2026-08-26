@@ -36,6 +36,7 @@ import {
   resolvePlacementOption,
 } from "@/lib/placement-choice-values";
 import { api } from "@/lib/api/client";
+import { DEFAULT_PROFILE_PLACEMENT_FIELDS } from "@/lib/profile-placement-fields";
 import { cn } from "@/lib/utils";
 
 const MAX_TEMPLATE_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -331,37 +332,81 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
           <div className="wizard-card flex flex-col p-4">
             <p className="text-sm font-medium">Fields to place</p>
             <p className="mt-0.5 text-xs text-muted-foreground">Drag onto the form →</p>
-            <div className="mt-3 max-h-64 space-y-2 overflow-y-auto lg:max-h-[min(60vh,520px)]">
-              {variables.length === 0 ? (
-                <p className="rounded-md border border-dashed border-border bg-muted/40 px-3 py-4 text-center text-xs text-muted-foreground">
-                  Add fields in the Fields step first.
+            <div className="mt-3 max-h-64 space-y-3 overflow-y-auto lg:max-h-[min(60vh,520px)]">
+              <div>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Requester profile
                 </p>
-              ) : (
-                variables.map((v) => (
-                  <div
-                    key={`${v.variable}:${v.label}`}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData("application/json", JSON.stringify(v));
-                      e.dataTransfer.effectAllowed = "copy";
-                    }}
-                    className="flex cursor-grab gap-2 rounded-md border border-border bg-background px-2.5 py-2 active:cursor-grabbing hover:border-maroon/40 hover:bg-maroon/5"
-                  >
-                    <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{v.label}</div>
-                      <div className="mt-0.5 truncate font-mono text-[10px] text-maroon">
-                        {v.variable}
-                      </div>
-                      {v.hint !== v.label ? (
+                <div className="space-y-2">
+                  {DEFAULT_PROFILE_PLACEMENT_FIELDS.map((v) => (
+                    <div
+                      key={v.variable}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(
+                          "application/json",
+                          JSON.stringify({
+                            variable: v.variable,
+                            label: v.label,
+                            hint: v.hint,
+                          }),
+                        );
+                        e.dataTransfer.effectAllowed = "copy";
+                      }}
+                      className="flex cursor-grab gap-2 rounded-md border border-maroon/25 bg-maroon/5 px-2.5 py-2 active:cursor-grabbing hover:border-maroon/50 hover:bg-maroon/10"
+                    >
+                      <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{v.label}</div>
+                        <div className="mt-0.5 truncate font-mono text-[10px] text-maroon">
+                          {v.variable}
+                        </div>
                         <div className="mt-0.5 truncate text-[10px] text-muted-foreground">
                           {v.hint}
                         </div>
-                      ) : null}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Form fields
+                </p>
+                {variables.length === 0 ? (
+                  <p className="rounded-md border border-dashed border-border bg-muted/40 px-3 py-4 text-center text-xs text-muted-foreground">
+                    Add fields in the Fields step first.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {variables.map((v) => (
+                      <div
+                        key={`${v.variable}:${v.label}`}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("application/json", JSON.stringify(v));
+                          e.dataTransfer.effectAllowed = "copy";
+                        }}
+                        className="flex cursor-grab gap-2 rounded-md border border-border bg-background px-2.5 py-2 active:cursor-grabbing hover:border-maroon/40 hover:bg-maroon/5"
+                      >
+                        <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium">{v.label}</div>
+                          <div className="mt-0.5 truncate font-mono text-[10px] text-maroon">
+                            {v.variable}
+                          </div>
+                          {v.hint !== v.label ? (
+                            <div className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                              {v.hint}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))
-              )}
+                )}
+              </div>
             </div>
           </div>
 
