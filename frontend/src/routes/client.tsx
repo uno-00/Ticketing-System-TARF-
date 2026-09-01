@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { Inbox, LayoutDashboard, MessageCircle, MessageSquare } from "lucide-react";
+import { Inbox, LayoutDashboard, MessageCircle, MessageSquare, Send } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { useMessageNotifications } from "@/hooks/use-message-notifications";
 import { useMessageRealtime } from "@/hooks/use-message-realtime";
@@ -9,7 +9,14 @@ import { usePokeNotifications } from "@/hooks/use-poke-notifications";
 import { api } from "@/lib/api/client";
 import { ensurePortalRole } from "@/lib/portal-guard";
 import { clientTicketNotifications } from "@/lib/notifications";
-import { CLIENT_DASHBOARD, CLIENT_FEEDBACK, CLIENT_MESSAGES, CLIENT_REQUESTS, isClientRole } from "@/lib/navigation";
+import {
+  CLIENT_DASHBOARD,
+  CLIENT_FEEDBACK,
+  CLIENT_MESSAGES,
+  CLIENT_REQUESTS,
+  CLIENT_SUBMIT,
+  isClientRole,
+} from "@/lib/navigation";
 import { countTicketsNeedingFeedback } from "@/lib/ticket-workflow";
 
 export const Route = createFileRoute("/client")({
@@ -29,11 +36,7 @@ function ClientLayout() {
   const messageNotifications = useMessageNotifications("client");
   const { data: tickets, isLoading: notificationsLoading } = useQuery({
     queryKey: ["my-tickets"],
-    queryFn: () => api.myTickets(),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 15_000,
-    staleTime: 0,
+    queryFn: () => api.myTickets("client"),
   });
 
   const notifications = useMemo(
@@ -61,6 +64,7 @@ function ClientLayout() {
         {
           title: "REQUESTS",
           items: [
+            { to: CLIENT_SUBMIT, label: "Submit Request", icon: Send },
             {
               to: CLIENT_REQUESTS,
               label: "My Requests",

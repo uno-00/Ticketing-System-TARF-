@@ -1883,6 +1883,10 @@
     scrollbar-gutter: stable;
   }
 
+  .document-preview-viewport.document-preview-viewport--bleed {
+    scrollbar-gutter: auto;
+  }
+
   .document-preview-viewport::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -1893,19 +1897,43 @@
     background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
   }
 
-  /* TARF printable field — size set via --dynamic-text-size on .print-template-canvas */
+  /* Placement text scales with the displayed form width (natural px → screen). */
+  .placement-scale-root {
+    container-type: inline-size;
+  }
+
+  /* TARF printable field — size set via --dynamic-text-size */
   .dynamic-text {
     display: inline-block;
     font-size: var(--dynamic-text-size, 10px);
-    line-height: 1.2;
-    font-family: Arial, sans-serif;
-    font-weight: normal;
+    line-height: 1;
+    font-family: "Liberation Sans", Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    font-kerning: normal;
+    font-variant-ligatures: none;
+    letter-spacing: 0;
+    word-spacing: 0;
     color: #111;
     width: var(--dynamic-text-width, 150px);
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
+    max-width: var(--dynamic-text-width, 150px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
     text-align: left;
+  }
+
+  .placement-scale-root .dynamic-text {
+    /* min 9px — cqw can be 0 while the dialog/layout settles, which made text vanish */
+    font-size: max(
+      9px,
+      calc(var(--dynamic-text-size, 10px) * 100cqw / var(--placement-natural-width, 1000))
+    );
+    width: calc(
+      var(--dynamic-text-width, 150px) * 100cqw / var(--placement-natural-width, 1000)
+    );
+    max-width: calc(
+      var(--dynamic-text-width, 150px) * 100cqw / var(--placement-natural-width, 1000)
+    );
   }
 
   .dynamic-text.placement-checkmark {
@@ -1918,6 +1946,15 @@
     letter-spacing: 0;
   }
 
+  .placement-scale-root .dynamic-text.placement-checkmark {
+    font-size: max(
+      10px,
+      calc(
+        var(--dynamic-text-size, 10px) * 1.15 * 100cqw / var(--placement-natural-width, 1000)
+      )
+    );
+  }
+
   .dynamic-text-anchor {
     position: absolute;
     z-index: 10;
@@ -1927,9 +1964,24 @@
     background: transparent;
     cursor: grab;
     text-align: left;
-    /* Drop point = start of first line of text on the form */
     transform: translateY(calc(var(--dynamic-text-size, 10px) * -1));
     transform-origin: left bottom;
+  }
+
+  .placement-scale-root .dynamic-text-anchor {
+    transform: translateY(
+      calc(var(--dynamic-text-size, 10px) * 100cqw / var(--placement-natural-width, 1000) * -1)
+    );
+  }
+
+  .placement-signature-img {
+    max-width: var(--dynamic-text-width, 150px);
+  }
+
+  .placement-scale-root .placement-signature-img {
+    max-width: calc(
+      var(--dynamic-text-width, 150px) * 100cqw / var(--placement-natural-width, 1000)
+    );
   }
 
   .dynamic-text-anchor:active {

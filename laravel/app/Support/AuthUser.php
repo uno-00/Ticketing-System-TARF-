@@ -10,10 +10,11 @@ final class AuthUser
         public readonly string $name,
         public readonly string $role,
         public readonly string $division,
+        public readonly string $designation = '',
     ) {}
 
     /**
-     * @return array{id: string, email: string, name: string, role: string, division: string}
+     * @return array{id: string, email: string, name: string, role: string, division: string, designation: string}
      */
     public function toPublicArray(): array
     {
@@ -23,6 +24,7 @@ final class AuthUser
             'name' => $this->name,
             'role' => $this->role,
             'division' => $this->division,
+            'designation' => $this->designation,
         ];
     }
 }

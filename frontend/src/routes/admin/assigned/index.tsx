@@ -20,8 +20,6 @@ function AssignedRequestsPage() {
     queryKey: ["assigned-tickets"],
     queryFn: () => api.listAssignedTickets("admin"),
     enabled: canQuery,
-    refetchOnMount: "always",
-    staleTime: 0,
   });
 
   const items = data?.items ?? [];

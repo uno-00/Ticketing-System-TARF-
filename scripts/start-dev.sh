@@ -59,6 +59,7 @@ if ! api_ready; then
   (
     cd "$ROOT/laravel"
     php artisan nmp:seed
+    php artisan nmp:rbac-seed
   ) || {
     echo ""
     echo "ERROR: Seed failed. Start MySQL first, then re-run this script."
@@ -151,9 +152,8 @@ echo ""
 echo "Open in browser:"
 echo "  http://127.0.0.1:${FRONTEND_PORT}/"
 echo "  Sign in: http://127.0.0.1:${FRONTEND_PORT}/login"
-echo "  Admin:   admin@nmp.gov.ph / admin123"
-echo "  Records: records@nmp.gov.ph / records123"
-echo "  Client:  user@nmp.gov.ph / user123"
+echo "  Use your museum username/email (org users linked to PAMANA)."
+echo "  Example (if in PAMANA): resty.morancil"
 echo ""
 echo "API:      http://127.0.0.1:4000/api/health"
 echo "Realtime: http://127.0.0.1:4001/health (socket.io)"

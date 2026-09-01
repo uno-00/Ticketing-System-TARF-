@@ -36,9 +36,6 @@ function ApprovalsPage() {
     queryKey: ["pending-tickets"],
     queryFn: () => api.listTickets({ status: "pending_approval" }, "admin"),
     enabled: canQuery,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    staleTime: 0,
   });
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [reason, setReason] = useState("");

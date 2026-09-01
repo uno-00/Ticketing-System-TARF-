@@ -1,5 +1,5 @@
 import { EmptyState, PanelLoading } from "@/components/layout/workspace-ui";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isImagePath, isPdfPath, resolveMediaUrl } from "@/lib/media-url";
@@ -13,8 +13,83 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.1;
 const FIT_ZOOM = 1;
-/** Comfortable reading width — form stays this size, centered with side margins. */
-const MAX_DOCUMENT_WIDTH_PX = 720;
+/** Cap for embedded/page previews (not full-bleed dialogs). */
+const MAX_DOCUMENT_WIDTH_PX = 960;
+
+/**
+ * Full form page + placement overlay.
+ * Image fills the panel width; text scales with the image so alignment stays locked.
+ */
+function MappedFormPage({
+  imageSrc,
+  alt,
+  overlay,
+  baseWidth,
+  zoom,
+  onImageError,
+  fullBleed,
+}: {
+  imageSrc: string;
+  alt: string;
+  overlay?: ReactNode;
+  baseWidth: number;
+  zoom: number;
+  onImageError?: () => void;
+  fullBleed?: boolean;
+}) {
+  const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
+  const displayWidth = Math.round(baseWidth * zoom);
+
+  useEffect(() => {
+    setNaturalWidth(null);
+  }, [imageSrc]);
+
+  // Full-bleed dialogs: always span 100% of the viewport (zoom grows past that).
+  // Embedded previews: cap width and center.
+  const outerStyle = fullBleed
+    ? zoom === 1
+      ? { width: "100%" as const }
+      : { width: `${zoom * 100}%` }
+    : { maxWidth: displayWidth };
+
+  return (
+    <div className={cn("w-full", !fullBleed && "mx-auto")} style={outerStyle}>
+      <div
+        className={cn(
+          "relative w-full overflow-hidden bg-white",
+          fullBleed ? "rounded-none shadow-none ring-0" : "rounded-md shadow-sm ring-1 ring-border/80",
+        )}
+      >
+        <img
+          src={imageSrc}
+          alt={alt}
+          className="block h-auto w-full max-w-none select-none"
+          draggable={false}
+          onLoad={(e) => {
+            const w = e.currentTarget.naturalWidth;
+            if (w > 0) setNaturalWidth(w);
+          }}
+          onError={onImageError}
+        />
+        {overlay ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 z-10",
+              naturalWidth ? "placement-scale-root" : null,
+            )}
+            style={
+              naturalWidth
+                ? ({ "--placement-natural-width": naturalWidth } as CSSProperties)
+                : undefined
+            }
+          >
+            {overlay}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 type ViewOnlyDocumentViewerProps = {
   src?: string | null;
@@ -38,25 +113,26 @@ function fileNameFromPath(path: string) {
   return path.split("/").pop()?.replace(/^\d+-/, "") || "Document";
 }
 
-function useDocumentLayout(enabled: boolean) {
+function useDocumentLayout(enabled: boolean, fillWidth = false) {
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [baseWidth, setBaseWidth] = useState(MAX_DOCUMENT_WIDTH_PX);
+  const [baseWidth, setBaseWidth] = useState(fillWidth ? 1200 : MAX_DOCUMENT_WIDTH_PX);
 
   useEffect(() => {
     const el = viewportRef.current;
     if (!el || !enabled) return;
 
     const update = () => {
-      const padding = 48;
+      // Edge-to-edge in dialogs (no inset); page embeds keep a small gutter + 960 cap.
+      const padding = fillWidth ? 0 : 48;
       const available = Math.max(280, el.clientWidth - padding);
-      setBaseWidth(Math.min(MAX_DOCUMENT_WIDTH_PX, available));
+      setBaseWidth(fillWidth ? available : Math.min(MAX_DOCUMENT_WIDTH_PX, available));
     };
 
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, fillWidth]);
 
   return { viewportRef, baseWidth };
 }
@@ -77,7 +153,7 @@ function ZoomToolbar({
   onReset: () => void;
 }) {
   return (
-    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/25 px-4 py-3 sm:px-5">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/25 px-3 py-2.5 sm:px-4">
       {fileLabel ? (
         <p className="min-w-0 truncate text-xs font-semibold text-foreground sm:text-sm">
           {fileLabel}
@@ -143,8 +219,10 @@ function DocumentViewport({
     <div
       ref={viewportRef}
       className={cn(
-        "document-preview-viewport min-w-0 overflow-auto bg-muted/25 p-4 sm:p-6",
-        fillHeight ? "min-h-0 flex-1" : "max-h-[min(70vh,720px)]",
+        "document-preview-viewport min-w-0 overflow-auto",
+        fillHeight
+          ? "document-preview-viewport--bleed min-h-0 flex-1 bg-background p-0"
+          : "max-h-[min(70vh,720px)] bg-muted/25 p-4 sm:p-6",
         viewportClassName,
       )}
     >
@@ -179,6 +257,10 @@ function ImageDocument({
   const [failed, setFailed] = useState(false);
   const displayWidth = Math.round(baseWidth * zoom);
 
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
   if (failed) {
     return (
       <EmptyState
@@ -188,24 +270,57 @@ function ImageDocument({
     );
   }
 
+  if (overlay) {
+    return (
+      <DocumentViewport
+        viewportRef={viewportRef}
+        fillHeight={fillHeight}
+        viewportClassName={viewportClassName}
+      >
+        <MappedFormPage
+          imageSrc={src}
+          alt={alt}
+          overlay={overlay}
+          baseWidth={baseWidth}
+          zoom={zoom}
+          onImageError={() => setFailed(true)}
+          fullBleed={fillHeight}
+        />
+      </DocumentViewport>
+    );
+  }
+
   return (
     <DocumentViewport
       viewportRef={viewportRef}
       fillHeight={fillHeight}
       viewportClassName={viewportClassName}
     >
-      <div className="mx-auto" style={{ width: displayWidth, maxWidth: "100%" }}>
-        <div className="relative overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-border/80">
+      <div
+        className={cn("w-full", !fillHeight && "mx-auto")}
+        style={
+          fillHeight
+            ? zoom === 1
+              ? { width: "100%" }
+              : { width: `${zoom * 100}%` }
+            : { width: displayWidth, maxWidth: "100%" }
+        }
+      >
+        <div
+          className={cn(
+            "relative w-full overflow-hidden bg-white",
+            fillHeight
+              ? "rounded-none shadow-none ring-0"
+              : "rounded-md shadow-sm ring-1 ring-border/80",
+          )}
+        >
           <img
             src={src}
             alt={alt}
-            className="block h-auto w-full select-none"
+            className="block h-auto w-full max-w-none select-none"
             draggable={false}
             onError={() => setFailed(true)}
           />
-          {overlay ? (
-            <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>
-          ) : null}
         </div>
       </div>
     </DocumentViewport>
@@ -269,12 +384,16 @@ function PdfEmbedDocument({
         const blob = await loadDocumentBlob(resolved ?? "", blobLoader);
 
         if (showMappedOverlay) {
-          const { dataUrl } = await pdfBlobFirstPageToDataUrl(blob, { maxWidth: 1600 });
+          const { dataUrl } = await pdfBlobFirstPageToDataUrl(blob, {
+            maxWidth: fillHeight ? 2000 : 1600,
+          });
           if (!cancelled) setPageImageUrls([dataUrl]);
           return;
         }
 
-        const { dataUrls } = await pdfBlobAllPagesToDataUrls(blob, { maxWidth: 1600 });
+        const { dataUrls } = await pdfBlobAllPagesToDataUrls(blob, {
+          maxWidth: fillHeight ? 2000 : 1600,
+        });
         if (!cancelled) setPageImageUrls(dataUrls);
       } catch (err) {
         if (!cancelled) {
@@ -290,7 +409,7 @@ function PdfEmbedDocument({
     return () => {
       cancelled = true;
     };
-  }, [src, blobLoader, showMappedOverlay]);
+  }, [src, blobLoader, showMappedOverlay, fillHeight]);
 
   const displayWidth = Math.round(baseWidth * zoom);
 
@@ -300,17 +419,50 @@ function PdfEmbedDocument({
   }
   if (pageImageUrls.length === 0) return null;
 
+  if (showMappedOverlay) {
+    return (
+      <DocumentViewport
+        viewportRef={viewportRef}
+        fillHeight={fillHeight}
+        viewportClassName={viewportClassName}
+      >
+        <MappedFormPage
+          imageSrc={pageImageUrls[0]}
+          alt={alt}
+          overlay={overlay}
+          baseWidth={baseWidth}
+          zoom={zoom}
+          fullBleed={fillHeight}
+        />
+      </DocumentViewport>
+    );
+  }
+
   return (
     <DocumentViewport
       viewportRef={viewportRef}
       fillHeight={fillHeight}
       viewportClassName={viewportClassName}
     >
-      <div className="mx-auto space-y-4" style={{ width: displayWidth, maxWidth: "100%" }}>
+      <div
+        className={cn("w-full space-y-4", !fillHeight && "mx-auto")}
+        style={
+          fillHeight
+            ? zoom === 1
+              ? { width: "100%" }
+              : { width: `${zoom * 100}%` }
+            : { width: displayWidth, maxWidth: "100%" }
+        }
+      >
         {pageImageUrls.map((pageImageUrl, index) => (
           <div
             key={`${index}-${pageImageUrl.slice(22, 64)}`}
-            className="relative overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-border/80"
+            className={cn(
+              "relative w-full overflow-hidden bg-white",
+              fillHeight
+                ? "rounded-none shadow-none ring-0"
+                : "rounded-md shadow-sm ring-1 ring-border/80",
+            )}
           >
             <img
               src={pageImageUrl}
@@ -318,9 +470,6 @@ function PdfEmbedDocument({
               className="block h-auto w-full select-none"
               draggable={false}
             />
-            {showMappedOverlay && index === 0 && overlay ? (
-              <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>
-            ) : null}
           </div>
         ))}
       </div>
@@ -341,7 +490,7 @@ export function ViewOnlyDocumentViewer({
   fillHeight = false,
 }: ViewOnlyDocumentViewerProps) {
   const [zoom, setZoom] = useState(FIT_ZOOM);
-  const { viewportRef, baseWidth } = useDocumentLayout(enabled);
+  const { viewportRef, baseWidth } = useDocumentLayout(enabled, fillHeight);
   const resolvedSrc = src ? resolveMediaUrl(src) : null;
   const isImage = resolvedSrc ? isImagePath(resolvedSrc) : false;
   const isPdf = resolvedSrc ? isPdfPath(resolvedSrc) : Boolean(blobLoader);
@@ -368,7 +517,11 @@ export function ViewOnlyDocumentViewer({
     />
   );
 
-  const shellClass = cn("min-w-0", fillHeight && "flex h-full min-h-0 flex-col", className);
+  const shellClass = cn(
+    "min-w-0 w-full",
+    fillHeight && "flex h-full min-h-0 flex-col",
+    className,
+  );
 
   if (isImage && resolvedSrc) {
     return (

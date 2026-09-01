@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, ApiError } from "@/lib/api/client";
 import type { TicketStatus } from "@/lib/api/types";
+import { getTicketDivision } from "@/lib/ticket-details";
 import { ADMIN_APPROVALS, ADMIN_DASHBOARD, ADMIN_MESSAGES, ADMIN_REQUESTS } from "@/lib/navigation";
 import { useAdminSession } from "@/lib/use-portal-session";
 import { cn } from "@/lib/utils";
@@ -146,8 +147,10 @@ function TicketDetailPage() {
             {ticket.creatorName ? (
               <span className="text-muted-foreground">· Client: {ticket.creatorName}</span>
             ) : null}
-            {ticket.division ? (
-              <span className="text-muted-foreground">· Division: {ticket.division}</span>
+            {getTicketDivision(ticket) ? (
+              <span className="text-muted-foreground">
+                · Division: {getTicketDivision(ticket)}
+              </span>
             ) : null}
           </div>
         }
@@ -198,7 +201,9 @@ function TicketDetailPage() {
                 description="Select ICT personnel for this request. The client's division is shown below — ICT handles requests from all NMP offices."
               >
                 <FlowNotice tone="info" title="Requestor's division">
-                  <span className="font-medium text-foreground">{ticket.division?.trim() || "Not specified"}</span>
+                  <span className="font-medium text-foreground">
+                    {getTicketDivision(ticket) || "Not specified"}
+                  </span>
                   {ticket.creatorName ? (
                     <span className="text-muted-foreground"> · {ticket.creatorName}</span>
                   ) : null}

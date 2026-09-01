@@ -62,7 +62,8 @@ export async function pdfBlobAllPagesToDataUrls(
   blob: Blob,
   options?: { maxWidth?: number },
 ): Promise<{ dataUrls: string[]; pageCount: number }> {
-  const maxWidth = options?.maxWidth ?? 1600;
+  // Higher default width keeps glyph spacing even when zoomed in the viewer.
+  const maxWidth = options?.maxWidth ?? 2000;
   const data = new Uint8Array(await blob.arrayBuffer());
   const doc = await pdfjs.getDocument({ data }).promise;
   const dataUrls: string[] = [];
@@ -70,7 +71,9 @@ export async function pdfBlobAllPagesToDataUrls(
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
     const page = await doc.getPage(pageNum);
     const baseViewport = page.getViewport({ scale: 1 });
-    const scale = Math.min(2, maxWidth / baseViewport.width);
+    // Prefer integer-ish scale for more even character spacing in canvas text.
+    const rawScale = Math.min(2.5, maxWidth / baseViewport.width);
+    const scale = Math.round(rawScale * 100) / 100;
     const viewport = page.getViewport({ scale });
 
     const canvas = document.createElement("canvas");
@@ -78,6 +81,10 @@ export async function pdfBlobAllPagesToDataUrls(
     canvas.height = Math.floor(viewport.height);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Could not create canvas for PDF rendering.");
+
+    // Crisp glyphs — avoid fractional smoothing artifacts that look like uneven letters.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
     await page.render({ canvas, canvasContext: ctx, viewport }).promise;
     dataUrls.push(canvas.toDataURL("image/png"));

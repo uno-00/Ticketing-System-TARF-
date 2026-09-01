@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\RbacController;
 use App\Http\Controllers\RecordsController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UploadController;
@@ -15,6 +16,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::middleware('jwt.auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/requester-profile', [AuthController::class, 'requesterProfile']);
         Route::patch('/profile', [AuthController::class, 'updateProfile']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
@@ -47,8 +49,8 @@ Route::middleware(['jwt.auth', 'role:record_management'])->prefix('records')->gr
 });
 
 Route::middleware('jwt.auth')->prefix('tickets')->group(function () {
-    Route::post('/', [TicketController::class, 'store'])->middleware('role:user');
-    Route::get('/mine', [TicketController::class, 'mine'])->middleware('role:user');
+    Route::post('/', [TicketController::class, 'store'])->middleware('role:user,admin');
+    Route::get('/mine', [TicketController::class, 'mine'])->middleware('role:user,admin');
     Route::get('/assigned/mine', [TicketController::class, 'assignedMine'])->middleware('role:admin');
     Route::get('/', [TicketController::class, 'index'])->middleware('role:admin');
     Route::get('/assignees', [TicketController::class, 'assignees'])->middleware('role:admin');
@@ -57,10 +59,10 @@ Route::middleware('jwt.auth')->prefix('tickets')->group(function () {
     Route::post('/{id}/approve', [TicketController::class, 'approve'])->middleware('role:admin');
     Route::post('/{id}/reject', [TicketController::class, 'reject'])->middleware('role:admin');
     Route::post('/{id}/assign', [TicketController::class, 'assign'])->middleware('role:admin');
-    Route::post('/{id}/complete', [TicketController::class, 'complete'])->middleware('role:user');
+    Route::post('/{id}/complete', [TicketController::class, 'complete'])->middleware('role:user,admin');
     Route::patch('/{id}/status', [TicketController::class, 'updateStatus'])->middleware('role:admin');
-    Route::post('/{id}/confirm', [TicketController::class, 'confirm'])->middleware('role:user');
-    Route::post('/{id}/feedback', [TicketController::class, 'feedback'])->middleware('role:user');
+    Route::post('/{id}/confirm', [TicketController::class, 'confirm'])->middleware('role:user,admin');
+    Route::post('/{id}/feedback', [TicketController::class, 'feedback'])->middleware('role:user,admin');
 });
 
 Route::middleware(['jwt.auth', 'role:admin,user'])->prefix('messages')->group(function () {
@@ -76,3 +78,15 @@ Route::middleware(['jwt.auth', 'role:admin,user'])->prefix('messages')->group(fu
 });
 
 Route::middleware('jwt.auth')->post('/uploads', [UploadController::class, 'store']);
+
+Route::middleware(['jwt.auth', 'role:admin'])->prefix('rbac')->group(function () {
+    Route::get('/summary', [RbacController::class, 'summary']);
+    Route::get('/roles', [RbacController::class, 'roles']);
+    Route::post('/roles', [RbacController::class, 'storeRole']);
+    Route::patch('/roles/{roleId}', [RbacController::class, 'updateRole']);
+    Route::delete('/roles/{roleId}', [RbacController::class, 'destroyRole']);
+    Route::put('/roles/{roleId}/permissions', [RbacController::class, 'syncRolePermissions']);
+    Route::get('/permissions', [RbacController::class, 'permissions']);
+    Route::get('/employees', [RbacController::class, 'employees']);
+    Route::put('/employees/{userId}/roles', [RbacController::class, 'syncRoles']);
+});

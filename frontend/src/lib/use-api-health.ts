@@ -18,10 +18,8 @@ export function useApiHealth() {
     };
 
     void check();
-    const id = window.setInterval(() => void check(), 10_000);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
     };
   }, []);
 

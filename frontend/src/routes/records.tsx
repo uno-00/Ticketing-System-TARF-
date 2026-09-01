@@ -58,8 +58,8 @@ function RecordsLayout() {
         title="Wrong account for Records"
         description={
           <>
-            No Records session found. Log in at <strong>{LOGIN}</strong> with{" "}
-            <strong>records@nmp.gov.ph</strong>.
+            No Records session found. Log in at <strong>{LOGIN}</strong> with a{" "}
+            <strong>record management</strong> museum account.
           </>
         }
       >

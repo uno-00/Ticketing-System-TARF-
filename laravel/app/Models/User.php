@@ -11,7 +11,8 @@ class User extends Model
 {
     use ApiSerializable;
 
-    protected $table = 'users';
+    /** Ticketing profile table (CHAR ids). Login credentials live on MySQL `users` via OrgUser. */
+    protected $table = 'users_';
 
     protected $primaryKey = 'id';
 
@@ -25,6 +26,7 @@ class User extends Model
         'password_hash',
         'name',
         'division',
+        'designation',
         'role',
         'active',
     ];
@@ -62,7 +64,7 @@ class User extends Model
     }
 
     /**
-     * @return array{id: string, email: string, name: string, role: string, division: string}
+     * @return array{id: string, email: string, name: string, role: string, division: string, designation: string}
      */
     public function toPublicUser(): array
     {
@@ -72,6 +74,7 @@ class User extends Model
             'name' => $this->name,
             'role' => $this->role,
             'division' => $this->division ?? '',
+            'designation' => $this->designation ?? '',
         ];
     }
 }

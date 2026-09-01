@@ -13,6 +13,14 @@ export function getTicketForm(ticket: TicketRecord): FormRecord | null {
   return typeof ticket.formId === "object" && ticket.formId !== null ? ticket.formId : null;
 }
 
+/** Requestor division for admin lists — prefer ticket.division, else PAMANA form answer. */
+export function getTicketDivision(ticket: TicketRecord): string {
+  const fromColumn = ticket.division?.trim() ?? "";
+  if (fromColumn) return fromColumn;
+  const fromAnswers = String(ticket.answers?.["{{prof_division}}"] ?? "").trim();
+  return fromAnswers;
+}
+
 export function formatTicketFieldValue(field: LiveFormField, value: unknown): string {
   if (value === undefined || value === null || value === "") return "—";
   const formatted = formatFieldAnswerValue(field, value);

@@ -9,6 +9,11 @@ import type {
   MessageableUser,
   MyFormsAnalytics,
   PokeRecord,
+  RbacEmployee,
+  RbacEmployeesResponse,
+  RbacPermission,
+  RbacRole,
+  RbacSummary,
   TicketRecord,
   TicketStatus,
 } from "./types";
@@ -74,7 +79,23 @@ export const api = {
 
   me: (slot: PortalSlot) => apiFetch<{ user: ApiUser }>("/api/auth/me", undefined, slot),
 
-  updateProfile: (body: { name: string; division: string }) =>
+  requesterProfile: (slot?: PortalSlot) =>
+    apiFetch<{
+      found: boolean;
+      source: string;
+      profile: {
+        name: string;
+        email: string;
+        division: string;
+        designation: string;
+        firstName: string;
+        middleName: string;
+        lastName: string;
+      };
+      values: Record<string, string>;
+    }>("/api/auth/requester-profile", undefined, slot),
+
+  updateProfile: (body: { name: string; division: string; designation?: string }) =>
     apiFetch<{ user: ApiUser }>("/api/auth/profile", {
       method: "PATCH",
       body: JSON.stringify(body),
@@ -100,8 +121,10 @@ export const api = {
     }),
 
   // Published forms (Client)
-  publishedForms: () => apiFetch<{ items: FormRecord[] }>("/api/forms/published"),
-  getPublishedForm: (id: string) => apiFetch<{ form: FormRecord }>(`/api/forms/published/${id}`),
+  publishedForms: () =>
+    apiFetch<{ items: FormRecord[] }>("/api/forms/published", undefined, "client"),
+  getPublishedForm: (id: string) =>
+    apiFetch<{ form: FormRecord }>(`/api/forms/published/${id}`, undefined, "client"),
   getPublishedFormDocument: (id: string) => apiFetchBlob(`/api/forms/published/${id}/document.pdf`),
 
   // Records — form review
@@ -129,12 +152,17 @@ export const api = {
   recordsActivity: () => apiFetch<{ items: ActivityRecord[] }>("/api/records/activity"),
 
   // Tickets
-  createTicket: (body: object) =>
-    apiFetch<{ ticket: TicketRecord }>("/api/tickets", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  myTickets: () => apiFetch<{ items: TicketRecord[] }>("/api/tickets/mine"),
+  createTicket: (body: object, slot?: PortalSlot) =>
+    apiFetch<{ ticket: TicketRecord }>(
+      "/api/tickets",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      slot,
+    ),
+  myTickets: (slot?: PortalSlot) =>
+    apiFetch<{ items: TicketRecord[] }>("/api/tickets/mine", undefined, slot),
   listTickets: (params?: Record<string, string>, slot?: PortalSlot) => {
     const q = new URLSearchParams(params).toString();
     return apiFetch<{ items: TicketRecord[]; total: number; pendingCount: number }>(
@@ -247,6 +275,57 @@ export const api = {
     ),
   listRecentPokes: (slot?: PortalSlot) =>
     apiFetch<{ items: PokeRecord[] }>("/api/messages/pokes/recent", undefined, slot),
+
+  rbacSummary: () => apiFetch<RbacSummary>("/api/rbac/summary", undefined, "admin"),
+  rbacRoles: () => apiFetch<{ items: RbacRole[] }>("/api/rbac/roles", undefined, "admin"),
+  rbacPermissions: () =>
+    apiFetch<{ items: RbacPermission[] }>("/api/rbac/permissions", undefined, "admin"),
+  rbacCreateRole: (body: { name: string; description?: string }) =>
+    apiFetch<{ role: RbacRole }>(
+      "/api/rbac/roles",
+      { method: "POST", body: JSON.stringify(body) },
+      "admin",
+    ),
+  rbacUpdateRole: (roleId: number, body: { description?: string | null }) =>
+    apiFetch<{ role: RbacRole }>(
+      `/api/rbac/roles/${roleId}`,
+      { method: "PATCH", body: JSON.stringify(body) },
+      "admin",
+    ),
+  rbacDeleteRole: (roleId: number) =>
+    apiFetch<{ ok: boolean }>(`/api/rbac/roles/${roleId}`, { method: "DELETE" }, "admin"),
+  rbacSyncRolePermissions: (roleId: number, permissionIds: number[]) =>
+    apiFetch<{ role: RbacRole }>(
+      `/api/rbac/roles/${roleId}/permissions`,
+      { method: "PUT", body: JSON.stringify({ permissionIds }) },
+      "admin",
+    ),
+  rbacEmployees: (params?: {
+    search?: string;
+    role?: string;
+    access?: string;
+    page?: number;
+    perPage?: number;
+  }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.set("search", params.search);
+    if (params?.role) q.set("role", params.role);
+    if (params?.access) q.set("access", params.access);
+    if (params?.page != null) q.set("page", String(params.page));
+    if (params?.perPage != null) q.set("perPage", String(params.perPage));
+    const qs = q.toString();
+    return apiFetch<RbacEmployeesResponse>(
+      `/api/rbac/employees${qs ? `?${qs}` : ""}`,
+      undefined,
+      "admin",
+    );
+  },
+  rbacSyncRoles: (userId: number, roleIds: number[]) =>
+    apiFetch<{ employee: RbacEmployee }>(
+      `/api/rbac/employees/${userId}/roles`,
+      { method: "PUT", body: JSON.stringify({ roleIds }) },
+      "admin",
+    ),
 
   uploadFile: (file: File) => {
     const fd = new FormData();

@@ -29,6 +29,7 @@ import { Route as ClientLoginRouteImport } from './routes/client/login'
 import { Route as ClientFormsRouteImport } from './routes/client/forms'
 import { Route as ClientFeedbackRouteImport } from './routes/client/feedback'
 import { Route as ClientDashboardRouteImport } from './routes/client/dashboard'
+import { Route as AdminSubmitRequestRouteImport } from './routes/admin/submit-request'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminMyFormsRouteImport } from './routes/admin/my-forms'
@@ -39,10 +40,15 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminApprovalsRouteImport } from './routes/admin/approvals'
 import { Route as ClientRequestsIndexRouteImport } from './routes/client/requests/index'
 import { Route as AdminRequestsIndexRouteImport } from './routes/admin/requests/index'
+import { Route as AdminMyRequestsIndexRouteImport } from './routes/admin/my-requests/index'
 import { Route as AdminAssignedIndexRouteImport } from './routes/admin/assigned/index'
 import { Route as RecordsFormsFormIdRouteImport } from './routes/records/forms/$formId'
 import { Route as ClientRequestsTicketIdRouteImport } from './routes/client/requests/$ticketId'
 import { Route as AdminRequestsTicketIdRouteImport } from './routes/admin/requests/$ticketId'
+import { Route as AdminRbacUsersRouteImport } from './routes/admin/rbac/users'
+import { Route as AdminRbacRolesRouteImport } from './routes/admin/rbac/roles'
+import { Route as AdminRbacPermissionsRouteImport } from './routes/admin/rbac/permissions'
+import { Route as AdminMyRequestsTicketIdRouteImport } from './routes/admin/my-requests/$ticketId'
 
 const UserRoute = UserRouteImport.update({
   id: '/user',
@@ -144,6 +150,11 @@ const ClientDashboardRoute = ClientDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ClientRoute,
 } as any)
+const AdminSubmitRequestRoute = AdminSubmitRequestRouteImport.update({
+  id: '/submit-request',
+  path: '/submit-request',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -194,6 +205,11 @@ const AdminRequestsIndexRoute = AdminRequestsIndexRouteImport.update({
   path: '/requests/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMyRequestsIndexRoute = AdminMyRequestsIndexRouteImport.update({
+  id: '/my-requests/',
+  path: '/my-requests/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAssignedIndexRoute = AdminAssignedIndexRouteImport.update({
   id: '/assigned/',
   path: '/assigned/',
@@ -214,6 +230,26 @@ const AdminRequestsTicketIdRoute = AdminRequestsTicketIdRouteImport.update({
   path: '/requests/$ticketId',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRbacUsersRoute = AdminRbacUsersRouteImport.update({
+  id: '/rbac/users',
+  path: '/rbac/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRbacRolesRoute = AdminRbacRolesRouteImport.update({
+  id: '/rbac/roles',
+  path: '/rbac/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRbacPermissionsRoute = AdminRbacPermissionsRouteImport.update({
+  id: '/rbac/permissions',
+  path: '/rbac/permissions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMyRequestsTicketIdRoute = AdminMyRequestsTicketIdRouteImport.update({
+  id: '/my-requests/$ticketId',
+  path: '/my-requests/$ticketId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -230,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/admin/my-forms': typeof AdminMyFormsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/submit-request': typeof AdminSubmitRequestRoute
   '/client/dashboard': typeof ClientDashboardRoute
   '/client/feedback': typeof ClientFeedbackRoute
   '/client/forms': typeof ClientFormsRoute
@@ -244,10 +281,15 @@ export interface FileRoutesByFullPath {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
+  '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
+  '/admin/rbac/roles': typeof AdminRbacRolesRoute
+  '/admin/rbac/users': typeof AdminRbacUsersRoute
   '/admin/requests/$ticketId': typeof AdminRequestsTicketIdRoute
   '/client/requests/$ticketId': typeof ClientRequestsTicketIdRoute
   '/records/forms/$formId': typeof RecordsFormsFormIdRoute
   '/admin/assigned/': typeof AdminAssignedIndexRoute
+  '/admin/my-requests/': typeof AdminMyRequestsIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/client/requests/': typeof ClientRequestsIndexRoute
 }
@@ -266,6 +308,7 @@ export interface FileRoutesByTo {
   '/admin/my-forms': typeof AdminMyFormsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/submit-request': typeof AdminSubmitRequestRoute
   '/client/dashboard': typeof ClientDashboardRoute
   '/client/feedback': typeof ClientFeedbackRoute
   '/client/forms': typeof ClientFormsRoute
@@ -280,10 +323,15 @@ export interface FileRoutesByTo {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
+  '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
+  '/admin/rbac/roles': typeof AdminRbacRolesRoute
+  '/admin/rbac/users': typeof AdminRbacUsersRoute
   '/admin/requests/$ticketId': typeof AdminRequestsTicketIdRoute
   '/client/requests/$ticketId': typeof ClientRequestsTicketIdRoute
   '/records/forms/$formId': typeof RecordsFormsFormIdRoute
   '/admin/assigned': typeof AdminAssignedIndexRoute
+  '/admin/my-requests': typeof AdminMyRequestsIndexRoute
   '/admin/requests': typeof AdminRequestsIndexRoute
   '/client/requests': typeof ClientRequestsIndexRoute
 }
@@ -303,6 +351,7 @@ export interface FileRoutesById {
   '/admin/my-forms': typeof AdminMyFormsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/submit-request': typeof AdminSubmitRequestRoute
   '/client/dashboard': typeof ClientDashboardRoute
   '/client/feedback': typeof ClientFeedbackRoute
   '/client/forms': typeof ClientFormsRoute
@@ -317,10 +366,15 @@ export interface FileRoutesById {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
+  '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
+  '/admin/rbac/roles': typeof AdminRbacRolesRoute
+  '/admin/rbac/users': typeof AdminRbacUsersRoute
   '/admin/requests/$ticketId': typeof AdminRequestsTicketIdRoute
   '/client/requests/$ticketId': typeof ClientRequestsTicketIdRoute
   '/records/forms/$formId': typeof RecordsFormsFormIdRoute
   '/admin/assigned/': typeof AdminAssignedIndexRoute
+  '/admin/my-requests/': typeof AdminMyRequestsIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/client/requests/': typeof ClientRequestsIndexRoute
 }
@@ -341,6 +395,7 @@ export interface FileRouteTypes {
     | '/admin/my-forms'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/submit-request'
     | '/client/dashboard'
     | '/client/feedback'
     | '/client/forms'
@@ -355,10 +410,15 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/admin/my-requests/$ticketId'
+    | '/admin/rbac/permissions'
+    | '/admin/rbac/roles'
+    | '/admin/rbac/users'
     | '/admin/requests/$ticketId'
     | '/client/requests/$ticketId'
     | '/records/forms/$formId'
     | '/admin/assigned/'
+    | '/admin/my-requests/'
     | '/admin/requests/'
     | '/client/requests/'
   fileRoutesByTo: FileRoutesByTo
@@ -377,6 +437,7 @@ export interface FileRouteTypes {
     | '/admin/my-forms'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/submit-request'
     | '/client/dashboard'
     | '/client/feedback'
     | '/client/forms'
@@ -391,10 +452,15 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/admin/my-requests/$ticketId'
+    | '/admin/rbac/permissions'
+    | '/admin/rbac/roles'
+    | '/admin/rbac/users'
     | '/admin/requests/$ticketId'
     | '/client/requests/$ticketId'
     | '/records/forms/$formId'
     | '/admin/assigned'
+    | '/admin/my-requests'
     | '/admin/requests'
     | '/client/requests'
   id:
@@ -413,6 +479,7 @@ export interface FileRouteTypes {
     | '/admin/my-forms'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/submit-request'
     | '/client/dashboard'
     | '/client/feedback'
     | '/client/forms'
@@ -427,10 +494,15 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/admin/my-requests/$ticketId'
+    | '/admin/rbac/permissions'
+    | '/admin/rbac/roles'
+    | '/admin/rbac/users'
     | '/admin/requests/$ticketId'
     | '/client/requests/$ticketId'
     | '/records/forms/$formId'
     | '/admin/assigned/'
+    | '/admin/my-requests/'
     | '/admin/requests/'
     | '/client/requests/'
   fileRoutesById: FileRoutesById
@@ -586,6 +658,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientDashboardRouteImport
       parentRoute: typeof ClientRoute
     }
+    '/admin/submit-request': {
+      id: '/admin/submit-request'
+      path: '/submit-request'
+      fullPath: '/admin/submit-request'
+      preLoaderRoute: typeof AdminSubmitRequestRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -656,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRequestsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/my-requests/': {
+      id: '/admin/my-requests/'
+      path: '/my-requests'
+      fullPath: '/admin/my-requests/'
+      preLoaderRoute: typeof AdminMyRequestsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/assigned/': {
       id: '/admin/assigned/'
       path: '/assigned'
@@ -684,6 +770,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRequestsTicketIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/rbac/users': {
+      id: '/admin/rbac/users'
+      path: '/rbac/users'
+      fullPath: '/admin/rbac/users'
+      preLoaderRoute: typeof AdminRbacUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rbac/roles': {
+      id: '/admin/rbac/roles'
+      path: '/rbac/roles'
+      fullPath: '/admin/rbac/roles'
+      preLoaderRoute: typeof AdminRbacRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rbac/permissions': {
+      id: '/admin/rbac/permissions'
+      path: '/rbac/permissions'
+      fullPath: '/admin/rbac/permissions'
+      preLoaderRoute: typeof AdminRbacPermissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/my-requests/$ticketId': {
+      id: '/admin/my-requests/$ticketId'
+      path: '/my-requests/$ticketId'
+      fullPath: '/admin/my-requests/$ticketId'
+      preLoaderRoute: typeof AdminMyRequestsTicketIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -696,8 +810,14 @@ interface AdminRouteChildren {
   AdminMyFormsRoute: typeof AdminMyFormsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSubmitRequestRoute: typeof AdminSubmitRequestRoute
+  AdminMyRequestsTicketIdRoute: typeof AdminMyRequestsTicketIdRoute
+  AdminRbacPermissionsRoute: typeof AdminRbacPermissionsRoute
+  AdminRbacRolesRoute: typeof AdminRbacRolesRoute
+  AdminRbacUsersRoute: typeof AdminRbacUsersRoute
   AdminRequestsTicketIdRoute: typeof AdminRequestsTicketIdRoute
   AdminAssignedIndexRoute: typeof AdminAssignedIndexRoute
+  AdminMyRequestsIndexRoute: typeof AdminMyRequestsIndexRoute
   AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
 }
 
@@ -710,8 +830,14 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMyFormsRoute: AdminMyFormsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSubmitRequestRoute: AdminSubmitRequestRoute,
+  AdminMyRequestsTicketIdRoute: AdminMyRequestsTicketIdRoute,
+  AdminRbacPermissionsRoute: AdminRbacPermissionsRoute,
+  AdminRbacRolesRoute: AdminRbacRolesRoute,
+  AdminRbacUsersRoute: AdminRbacUsersRoute,
   AdminRequestsTicketIdRoute: AdminRequestsTicketIdRoute,
   AdminAssignedIndexRoute: AdminAssignedIndexRoute,
+  AdminMyRequestsIndexRoute: AdminMyRequestsIndexRoute,
   AdminRequestsIndexRoute: AdminRequestsIndexRoute,
 }
 

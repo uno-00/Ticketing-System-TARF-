@@ -37,6 +37,7 @@ export async function createTicketFromClient(
       name: user.name,
       email: user.email,
       division: user.division,
+      designation: (user as { designation?: string }).designation ?? "",
     },
     body.answers ?? {},
   );

@@ -12,6 +12,7 @@ export type RequesterProfile = {
   email?: string;
   division?: string;
   firstName?: string;
+  middleName?: string;
   middleInitial?: string;
   lastName?: string;
   designation?: string;
@@ -36,21 +37,14 @@ export function parseDisplayName(name: string): {
 export function buildRequesterProfileAnswerValues(
   profile: RequesterProfile,
 ): Record<string, string> {
-  let firstName = (profile.firstName ?? "").trim();
-  let middleInitial = (profile.middleInitial ?? "").trim();
-  let lastName = (profile.lastName ?? "").trim();
-
-  if (!firstName && !lastName && (profile.name ?? "").trim()) {
-    const parsed = parseDisplayName(profile.name!);
-    firstName = parsed.firstName;
-    middleInitial = middleInitial || parsed.middleInitial;
-    lastName = parsed.lastName;
-  }
+  const firstName = (profile.firstName ?? "").trim();
+  const middleName = (profile.middleName ?? profile.middleInitial ?? "").trim();
+  const lastName = (profile.lastName ?? "").trim();
 
   return {
     "{{prof_division}}": (profile.division ?? "").trim(),
     "{{prof_first}}": firstName,
-    "{{prof_middle}}": middleInitial,
+    "{{prof_middle}}": middleName,
     "{{prof_last}}": lastName,
     "{{prof_email}}": (profile.email ?? "").trim(),
     "{{prof_designation}}": (profile.designation ?? "").trim(),
@@ -62,7 +56,7 @@ export function mergeRequesterProfileIntoAnswers(
   answers: Record<string, unknown>,
 ): Record<string, unknown> {
   return {
-    ...buildRequesterProfileAnswerValues(profile),
     ...answers,
+    ...buildRequesterProfileAnswerValues(profile),
   };
 }

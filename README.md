@@ -25,13 +25,11 @@ bun run start
 
 Requires MySQL running locally and [Bun](https://bun.sh).
 
-## Seed accounts
+## Accounts
 
-| Email | Password | Portal |
-|-------|----------|--------|
-| admin@nmp.gov.ph | admin123 | Admin |
-| user@nmp.gov.ph | user123 | Client |
-| records@nmp.gov.ph | records123 | Records |
+Sign in with your **museum org username/email** (MySQL `users`). Requestor details auto-fill from PAMANA (`staffs` / `staffinformations`) when the account is linked.
+
+Demo `@nmp.gov.ph` seed accounts have been removed.
 
 ## Build
 

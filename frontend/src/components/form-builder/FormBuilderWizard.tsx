@@ -22,7 +22,7 @@ import { ProcedureStep } from "./steps/procedure-step";
 
 function formSaveErrorMessage(error: unknown, email?: string) {
   if (error instanceof ApiError && error.status === 403) {
-    return `Signed in as ${email ?? "another account"} — only admin can create forms. Sign out, then log in with admin@nmp.gov.ph.`;
+    return `Signed in as ${email ?? "another account"} — only admin can create forms. Sign out, then log in with an admin museum account.`;
   }
   return error instanceof Error ? error.message : "Could not save form to server.";
 }
@@ -119,7 +119,7 @@ export function FormBuilderWizard() {
       await qc.invalidateQueries({ queryKey: ["records-dashboard"] });
       await qc.invalidateQueries({ queryKey: ["records-pending"] });
       toast.success(`"${submitted.title}" submitted to Records`, {
-        description: "Open Records portal (separate tab) as records@nmp.gov.ph → Pending Forms.",
+        description: "Open Records portal (separate tab) as a records officer → Pending Forms.",
         duration: 8000,
       });
       setDraft(newDraft());
@@ -202,7 +202,9 @@ export function FormBuilderWizard() {
           tone="danger"
           title="Could not save form"
           action={
-            saveError.includes("admin@nmp.gov.ph") ? (
+            saveError.toLowerCase().includes("admin") ||
+            saveError.toLowerCase().includes("forbidden") ||
+            saveError.toLowerCase().includes("role") ? (
               <button
                 type="button"
                 className="text-xs font-medium underline"

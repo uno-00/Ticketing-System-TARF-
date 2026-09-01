@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { FormRecord, LiveFormField } from "@/lib/api/types";
 import type { PrintFieldPlacement } from "@/lib/form-builder-store";
 import { DEFAULT_PRINT_PLACEMENT_FONT_SIZE } from "@/lib/form-builder-store";
@@ -41,10 +41,6 @@ function renderPlacementLayer(
   options?: BuildPlacementOverlayOptions,
 ) {
   const fieldTextWidth = Math.round(fontSize * 15);
-  const cssVars = {
-    "--dynamic-text-size": `${fontSize}px`,
-    "--dynamic-text-width": `${fieldTextWidth}px`,
-  } as CSSProperties;
 
   const markers = placements
     .map((placement) => {
@@ -57,8 +53,12 @@ function renderPlacementLayer(
         return (
           <span
             key={placement.id}
-            className="dynamic-text-anchor pointer-events-none"
-            style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%` }}
+            className="pointer-events-none absolute z-20"
+            style={{
+              left: `${placement.xPct}%`,
+              top: `${placement.yPct}%`,
+              transform: "translateY(-100%)",
+            }}
             title={placement.label}
           >
             <img
@@ -102,16 +102,32 @@ function renderPlacementLayer(
       return (
         <span
           key={placement.id}
-          className="dynamic-text-anchor pointer-events-none"
-          style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%` }}
+          className="pointer-events-none absolute z-20"
+          style={{
+            left: `${placement.xPct}%`,
+            top: `${placement.yPct}%`,
+            transform: "translateY(-100%)",
+            maxWidth: fieldTextWidth,
+          }}
           title={placement.label}
         >
           <span
-            className={cn(
-              hasAnswer ? "dynamic-text" : "dynamic-text opacity-80",
-              isCheckmark && "placement-checkmark",
-            )}
-            style={{ color: "#111111", textShadow: "0 0 2px rgba(255,255,255,0.85)" }}
+            className={cn(isCheckmark && "placement-checkmark")}
+            style={{
+              display: "inline-block",
+              color: "#111111",
+              fontSize: isCheckmark ? Math.round(fontSize * 1.15) : fontSize,
+              fontWeight: isCheckmark ? 700 : 400,
+              fontFamily: '"Liberation Sans", Arial, Helvetica, sans-serif',
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "clip",
+              maxWidth: fieldTextWidth,
+              backgroundColor: hasAnswer ? "rgba(255,255,255,0.72)" : "transparent",
+              textShadow: "0 0 2px rgba(255,255,255,0.9)",
+              padding: hasAnswer ? "0 2px" : 0,
+            }}
           >
             {text}
           </span>
@@ -123,10 +139,7 @@ function renderPlacementLayer(
   if (markers.length === 0) return null;
 
   return (
-    <div
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      style={cssVars}
-    >
+    <div className="pointer-events-none absolute inset-0 z-10 h-full w-full">
       {markers}
     </div>
   );

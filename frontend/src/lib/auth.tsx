@@ -135,18 +135,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [activeSlot]);
 
   const login = useCallback(async (usernameOrEmail: string, password: string) => {
-    const email = usernameOrEmail.includes("@")
-      ? usernameOrEmail.trim().toLowerCase()
-      : `${usernameOrEmail.trim()}@nmp.gov.ph`.toLowerCase();
+    // Send username or email as-is; Laravel authenticates against MySQL `users`
+    const loginId = usernameOrEmail.trim();
     try {
-      const { token, user: u } = await api.login(email, password);
+      const { token, user: u } = await api.login(loginId, password);
       const slot = roleToSlot(u.role);
       setSession(slot, { token, user: u });
+      // Also unlock client portal so PAMANA employees (often admin/staff) can submit TA forms.
+      if (slot !== "client") {
+        setSession("client", { token, user: u });
+      }
 
       setSessions(readSessionsMap());
 
       const currentSlot = pathToSlot(window.location.pathname);
-      if (currentSlot === slot) {
+      if (currentSlot === slot || currentSlot === "client") {
         setUser(u);
         setSessionReady(true);
         setIsAuthLoading(false);

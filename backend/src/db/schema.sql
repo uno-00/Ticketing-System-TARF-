@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
   division VARCHAR(255) NOT NULL DEFAULT 'ICT',
+  designation VARCHAR(255) NOT NULL DEFAULT '',
   role ENUM('admin', 'record_management', 'user') NOT NULL DEFAULT 'user',
   active TINYINT(1) NOT NULL DEFAULT 1,
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

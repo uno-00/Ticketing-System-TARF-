@@ -12,8 +12,18 @@ export type Placement = {
   yPct: number;
 };
 
-/** Matches `.dynamic-text-anchor { transform: translateY(-fontSize) }` in the form builder. */
+/**
+ * Matches form-builder CSS:
+ *   .dynamic-text-anchor { transform: translateY(calc(var(--dynamic-text-size) * -1)); }
+ * Baseline sits ~ascender below the top of that translated box.
+ */
 const FONT_ASCENDER_RATIO = 0.72;
+
+const PREFERRED_FONTS = [
+  "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+  "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+];
 
 function resolveLocalUploadPath(urlPath: string) {
   const filename = path.basename(urlPath);
@@ -25,7 +35,45 @@ function placementBaselineFromTop(pageHeight: number, yPct: number, fontSize: nu
   return anchorTop - fontSize * (1 - FONT_ASCENDER_RATIO);
 }
 
-/** Vector checkmark for checkbox placements (Helvetica cannot render ✓ reliably). */
+/**
+ * Form builder maps on a rasterized PDF at scale = min(2, 1600/pageWidth).
+ * Font size is chosen in CSS px on that raster — convert back to PDF points
+ * when burning text into downloadable/ticket PDFs.
+ */
+function fontSizeForPdfPage(pageWidth: number, cssFontSize: number) {
+  const previewScale = Math.min(2, 1600 / Math.max(pageWidth, 1));
+  const size = cssFontSize / previewScale;
+  return Math.max(4, Math.min(72, size));
+}
+
+async function embedPlacementFont(pdfDoc: PDFDocument): Promise<PDFFont> {
+  for (const fontPath of PREFERRED_FONTS) {
+    if (!fs.existsSync(fontPath)) continue;
+    try {
+      const bytes = fs.readFileSync(fontPath);
+      return await pdfDoc.embedFont(bytes, { subset: true });
+    } catch {
+      /* try next */
+    }
+  }
+  return pdfDoc.embedFont(StandardFonts.Helvetica);
+}
+
+/** Strip characters the embedded font cannot encode (avoid odd gaps / tofu). */
+function sanitizeDrawText(font: PDFFont, text: string) {
+  let out = "";
+  for (const char of text) {
+    try {
+      font.encodeText(char);
+      out += char;
+    } catch {
+      out += char === "\t" ? " " : char === "\n" || char === "\r" ? " " : "?";
+    }
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/** Vector checkmark for checkbox placements. */
 function drawPlacementCheckmark(
   page: PDFPage,
   anchorX: number,
@@ -88,6 +136,7 @@ async function drawPlacementsOnPage(
   emptyFallbackToLabel: boolean,
 ) {
   const { width, height } = page.getSize();
+  const maxWidth = fontSize * 15;
 
   for (const placement of placements) {
     const imageUrl = imageValues[placement.variable]?.trim();
@@ -98,26 +147,37 @@ async function drawPlacementsOnPage(
     }
 
     const answered = values[placementValueKey(placement)]?.trim() || "";
-    const text = answered || (emptyFallbackToLabel ? placement.label : "");
-    if (!text) continue;
+    const rawText = answered || (emptyFallbackToLabel ? placement.label : "");
+    if (!rawText) continue;
 
     const x = (placement.xPct / 100) * width;
     const baselineFromTop = placementBaselineFromTop(height, placement.yPct, fontSize);
     const y = height - baselineFromTop;
-    const isCheck = isPlacementCheckmark(text);
+    const isCheck = isPlacementCheckmark(rawText);
 
     if (isCheck) {
       drawPlacementCheckmark(page, x, baselineFromTop, height, fontSize);
       continue;
     }
 
-    page.drawText(text, {
+    const text = sanitizeDrawText(font, rawText);
+    if (!text) continue;
+
+    // Draw as a single line (no wrap) so letter spacing stays even like the mapper preview.
+    let drawText = text;
+    let drawSize = fontSize;
+    const textWidth = font.widthOfTextAtSize(drawText, drawSize);
+    if (textWidth > maxWidth && drawText.length > 1) {
+      // Slightly shrink rather than wrapping mid-word (which looks uneven).
+      drawSize = Math.max(4, (fontSize * maxWidth) / textWidth);
+    }
+
+    page.drawText(drawText, {
       x,
       y,
-      size: fontSize,
+      size: drawSize,
       font,
       color: rgb(0.1, 0.1, 0.1),
-      maxWidth: fontSize * 15,
     });
   }
 }
@@ -137,7 +197,7 @@ export async function embedTemplateWithPlacements(
   const lower = templatePath.toLowerCase();
   const emptyFallbackToLabel = options?.emptyFallbackToLabel ?? false;
   const imageValues = options?.imageValues ?? {};
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const font = await embedPlacementFont(pdfDoc);
 
   if (lower.endsWith(".pdf")) {
     const templatePdf = await PDFDocument.load(bytes);
@@ -147,13 +207,15 @@ export async function embedTemplateWithPlacements(
       const page = pages[i];
       pdfDoc.addPage(page);
       if (i === 0 && placements.length > 0) {
+        const { width } = page.getSize();
+        const drawSize = fontSizeForPdfPage(width, fontSize);
         await drawPlacementsOnPage(
           page,
           pdfDoc,
           placements,
           values,
           imageValues,
-          fontSize,
+          drawSize,
           font,
           emptyFallbackToLabel,
         );
@@ -172,6 +234,7 @@ export async function embedTemplateWithPlacements(
     return false;
   }
 
+  // Image templates: page units == pixels, matching CSS px on the mapping canvas.
   const page = pdfDoc.addPage([image.width, image.height]);
   page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
 

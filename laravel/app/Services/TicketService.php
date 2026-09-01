@@ -20,6 +20,7 @@ class TicketService
         private FormService $forms,
         private ActivityService $activity,
         private TicketConversationService $ticketConversations,
+        private PamanaEmployeeService $pamana,
     ) {}
 
     /**
@@ -44,14 +45,49 @@ class TicketService
             throw new ApiException(400, 'Only PDF attachments are allowed');
         }
 
-        $mergedAnswers = ProfilePlacementFields::mergeRequesterProfileIntoAnswers([
-            'name' => $user->name,
-            'email' => $user->email,
-            'division' => $user->division,
-        ], $answers);
+        $ticketingUser = User::query()->find($user->id);
+        $employee = $ticketingUser ? $this->pamana->findForTicketingUser($ticketingUser) : null;
+        if ($employee) {
+            $profileEmail = $employee['email'] !== ''
+                ? $employee['email']
+                : (string) ($ticketingUser?->email ?: $user->email);
+            $mergedAnswers = array_merge($answers, ProfilePlacementFields::buildRequesterProfileAnswerValues([
+                'name' => $employee['name'],
+                'email' => $profileEmail,
+                'division' => $employee['division'],
+                'designation' => $employee['designation'],
+                'firstName' => $employee['firstName'],
+                'middleName' => $employee['middleName'],
+                'lastName' => $employee['lastName'],
+            ]));
+        } else {
+            $mergedAnswers = ProfilePlacementFields::mergeRequesterProfileIntoAnswers(
+                $this->pamana->requesterProfileFor(
+                    $ticketingUser ?? [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'division' => $user->division,
+                        'designation' => $user->designation,
+                    ],
+                ),
+                $answers,
+            );
+            // Always keep a login email on the TA form even without PAMANA.
+            if (trim((string) ($mergedAnswers['{{prof_email}}'] ?? '')) === '') {
+                $mergedAnswers['{{prof_email}}'] = (string) ($ticketingUser?->email ?: $user->email);
+            }
+        }
 
         $fields = $form['fields'] ?? [];
         $storedAnswers = PlacementValues::normalizeTicketAnswers($fields, $mergedAnswers);
+
+        $requestorDivision = trim((string) ($storedAnswers['{{prof_division}}'] ?? ''));
+        if ($requestorDivision === '') {
+            $requestorDivision = trim((string) ($employee['division'] ?? ''));
+        }
+        if ($requestorDivision === '') {
+            $requestorDivision = trim((string) ($ticketingUser?->division ?: $user->division));
+        }
 
         $description = collect($fields)->map(function ($field) use ($storedAnswers) {
             $variable = (string) ($field['variable'] ?? '');
@@ -77,7 +113,7 @@ class TicketService
             'creator_id' => $user->id,
             'creator_name' => $user->name,
             'creator_email' => $user->email,
-            'division' => $user->division,
+            'division' => $requestorDivision,
             'answers' => $storedAnswers,
             'attachment_url' => (string) ($attachmentUrl ?? ''),
             'attachment_name' => (string) ($attachmentName ?? ''),

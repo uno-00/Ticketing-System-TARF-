@@ -29,10 +29,6 @@ function PendingFormsPage() {
   const { data, isLoading, refetch, isFetching, isError, error } = useQuery({
     queryKey: ["records-pending", search],
     queryFn: () => api.recordsForms({ status: "pending_review", ...(search ? { search } : {}) }),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 10_000,
-    staleTime: 0,
     enabled: canQuery,
     retry: 1,
   });

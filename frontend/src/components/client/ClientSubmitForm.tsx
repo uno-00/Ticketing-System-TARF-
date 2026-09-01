@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, Loader2 } from "lucide-react";
@@ -21,10 +21,13 @@ import type { FormRecord, LiveFormField } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth";
 import { fieldHasAnswer } from "@/lib/form-field-values";
 import { CLIENT_REQUESTS } from "@/lib/navigation";
+import { mergeRequesterProfileIntoAnswers } from "@/lib/profile-placement-fields";
 import { dataUrlToFile } from "@/lib/upload-data-url";
 
 type ClientSubmitFormProps = {
   initialFormId?: string;
+  /** Where to go after a successful submit (defaults to client My Requests). */
+  successTo?: string;
 };
 
 async function prepareAnswersForSubmit(
@@ -49,7 +52,10 @@ async function prepareAnswersForSubmit(
   return prepared;
 }
 
-export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
+export function ClientSubmitForm({
+  initialFormId,
+  successTo = CLIENT_REQUESTS,
+}: ClientSubmitFormProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -71,11 +77,80 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
     enabled: Boolean(selectedFormId),
   });
 
+  const { data: requesterData, isLoading: requesterLoading } = useQuery({
+    queryKey: ["requester-profile", "client", user?.id],
+    queryFn: () => api.requesterProfile("client"),
+    enabled: Boolean(user?.id),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
   useEffect(() => {
     if (initialFormId) setSelectedFormId(initialFormId);
   }, [initialFormId]);
 
+  // Persist PAMANA {{prof_*}} into local answers so View form file always has them.
+  useEffect(() => {
+    if (!requesterData?.found || !requesterData.values) return;
+    const values = requesterData.values;
+    const hasData = Object.values(values).some((v) => String(v ?? "").trim() !== "");
+    if (!hasData) return;
+    setAnswers((prev) => ({ ...prev, ...values }));
+  }, [requesterData]);
+
   const form = formData?.form;
+
+  const requesterProfile = useMemo(() => {
+    // Prefer PAMANA hit for the requesting client.
+    if (requesterData?.found && requesterData.profile) {
+      const p = requesterData.profile;
+      return {
+        name: p.name,
+        email: p.email,
+        division: p.division,
+        designation: p.designation,
+        firstName: p.firstName,
+        middleName: p.middleName,
+        lastName: p.lastName,
+      };
+    }
+    // Fallback: enriched /me fields (also PAMANA-backed when available).
+    if (!user) return null;
+    return {
+      name: user.name,
+      email: user.email,
+      division: user.division,
+      designation: user.designation,
+      firstName: user.firstName ?? "",
+      middleName: user.middleName ?? "",
+      lastName: user.lastName ?? "",
+    };
+  }, [requesterData, user]);
+
+  const previewAnswers = useMemo(() => {
+    const merged = requesterProfile
+      ? mergeRequesterProfileIntoAnswers(requesterProfile, answers)
+      : answers;
+    // Guaranteed {{prof_*}} keys from PAMANA when the client was matched.
+    if (requesterData?.found && requesterData.values) {
+      return { ...merged, ...requesterData.values };
+    }
+    return merged;
+  }, [requesterProfile, answers, requesterData?.found, requesterData?.values]);
+
+  const profileSummary = useMemo(() => {
+    if (!requesterProfile && !requesterData?.values) return null;
+    const values = requesterData?.values ?? mergeRequesterProfileIntoAnswers(requesterProfile ?? {}, {});
+    return {
+      division: String(values["{{prof_division}}"] || "—"),
+      first: String(values["{{prof_first}}"] || "—"),
+      middle: String(values["{{prof_middle}}"] || "—"),
+      last: String(values["{{prof_last}}"] || "—"),
+      email: String(values["{{prof_email}}"] || "—"),
+      designation: String(values["{{prof_designation}}"] || "—"),
+      fromPamana: requesterData?.found === true,
+    };
+  }, [requesterProfile, requesterData]);
 
   const submitMutation = useMutation({
     mutationFn: async ({
@@ -85,11 +160,24 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
       form: FormRecord;
       fieldAnswers: Record<string, unknown>;
     }) => {
-      const answersPayload = await prepareAnswersForSubmit(f.fields, fieldAnswers);
-      return api.createTicket({
-        formId: f._id,
-        answers: answersPayload,
-      });
+      const prepared = await prepareAnswersForSubmit(f.fields, fieldAnswers);
+      const fresh = await api.requesterProfile("client");
+      if (!fresh.found) {
+        throw new Error(
+          "No PAMANA employee record found for your login. Sign in with your museum username so requestor details can auto-fill.",
+        );
+      }
+      const answersPayload = {
+        ...prepared,
+        ...fresh.values,
+      };
+      return api.createTicket(
+        {
+          formId: f._id,
+          answers: answersPayload,
+        },
+        "client",
+      );
     },
     onSuccess: (res) => {
       toast.success("Request submitted", {
@@ -97,7 +185,7 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
       });
       setAnswers({});
       void queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
-      void navigate({ to: CLIENT_REQUESTS });
+      void navigate({ to: successTo });
     },
     onError: (err: Error) => toast.error(err.message || "Submission failed"),
   });
@@ -161,7 +249,11 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
             value={selectedFormId}
             onChange={(e) => {
               setSelectedFormId(e.target.value);
-              setAnswers({});
+              // Keep PAMANA profile fields when switching forms.
+              setAnswers((prev) => {
+                if (!requesterData?.found || !requesterData.values) return {};
+                return { ...requesterData.values };
+              });
             }}
           >
             <option value="">Select a form…</option>
@@ -179,7 +271,8 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
           <>
             {form.printTemplateImagePath?.trim() ? (
               <FlowNotice tone="info" title="Review the TA form">
-                Open the uploaded template before filling in your request fields.
+                Open the uploaded template before filling in your request fields. Requestor details
+                are filled automatically from your account.
                 <div className="mt-3">
                   <Button
                     type="button"
@@ -192,6 +285,46 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
                     View form file
                   </Button>
                 </div>
+              </FlowNotice>
+            ) : null}
+
+            {requesterLoading ? (
+              <FlowNotice tone="info" title="Loading requestor details…">
+                Fetching employee profile from PAMANA…
+              </FlowNotice>
+            ) : profileSummary ? (
+              <FlowNotice
+                tone={profileSummary.fromPamana ? "success" : "warning"}
+                title="Your requestor details (auto-filled)"
+              >
+                <div className="mt-1 grid gap-1 text-sm sm:grid-cols-2">
+                  <p>
+                    <span className="text-muted-foreground">Division/Section:</span>{" "}
+                    {profileSummary.division}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Designation:</span>{" "}
+                    {profileSummary.designation}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">First name:</span> {profileSummary.first}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Middle initial:</span>{" "}
+                    {profileSummary.middle}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Last name:</span> {profileSummary.last}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Email:</span> {profileSummary.email}
+                  </p>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {profileSummary.fromPamana
+                    ? "Filled from pamana_employees_new.staffinformations + staffs for your login."
+                    : "No PAMANA employee record found for this login. Sign in with your museum username (e.g. resty.morancil) so requestor details auto-fill on the TA form."}
+                </p>
               </FlowNotice>
             ) : null}
 
@@ -235,7 +368,7 @@ export function ClientSubmitForm({ initialFormId }: ClientSubmitFormProps) {
               formId={form._id}
               formTitle={form.title}
               refNumber={form.refNumber}
-              answers={answers}
+              answers={previewAnswers}
               open={filePreviewOpen}
               onOpenChange={setFilePreviewOpen}
             />

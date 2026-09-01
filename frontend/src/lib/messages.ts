@@ -3,7 +3,7 @@ import type { Role } from "@/lib/api/types";
 export function messageRoleLabel(role: Role | string): string {
   if (role === "admin") return "Admin";
   if (role === "record_management") return "Records";
-  return "Client";
+  return "Staff";
 }
 
 export function roleSectionLabel(role: Role | string): string {

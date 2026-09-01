@@ -42,10 +42,6 @@ function RecordsDashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["records-dashboard"],
     queryFn: () => api.recordsDashboard(),
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchInterval: 15_000,
-    staleTime: 0,
     enabled: canQuery,
   });
 

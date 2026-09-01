@@ -12,7 +12,7 @@ import { getSession, setSession } from "@/lib/sessions";
 function roleLabel(role: string | undefined) {
   if (role === "admin") return "Admin";
   if (role === "record_management") return "Records";
-  if (role === "user") return "Client";
+  if (role === "user") return "Staff";
   return role ?? "—";
 }
 
@@ -20,6 +20,7 @@ export function SettingsPage() {
   const { user, activeSlot } = useAuth();
   const [name, setName] = useState(user?.name ?? "");
   const [division, setDivision] = useState(user?.division ?? "");
+  const [designation, setDesignation] = useState(user?.designation ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,10 +28,16 @@ export function SettingsPage() {
   useEffect(() => {
     setName(user?.name ?? "");
     setDivision(user?.division ?? "");
-  }, [user?.name, user?.division]);
+    setDesignation(user?.designation ?? "");
+  }, [user?.name, user?.division, user?.designation]);
 
   const profileMutation = useMutation({
-    mutationFn: () => api.updateProfile({ name: name.trim(), division: division.trim() }),
+    mutationFn: () =>
+      api.updateProfile({
+        name: name.trim(),
+        division: division.trim(),
+        designation: designation.trim(),
+      }),
     onSuccess: ({ user: updated }) => {
       if (activeSlot) {
         const session = getSession(activeSlot);
@@ -118,6 +125,16 @@ export function SettingsPage() {
                 onChange={(e) => setDivision(e.target.value)}
                 placeholder="e.g. ICT"
                 autoComplete="organization"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="settings-designation">Designation</Label>
+              <Input
+                id="settings-designation"
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                placeholder="e.g. Museum Researcher"
+                autoComplete="organization-title"
               />
             </div>
             <Button type="submit" disabled={profileMutation.isPending} className="shadow-sm">

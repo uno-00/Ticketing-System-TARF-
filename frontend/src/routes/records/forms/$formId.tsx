@@ -36,8 +36,6 @@ function FormReviewPage() {
     queryKey: ["form-review", formId],
     queryFn: () => api.getRecordsForm(formId),
     enabled: canQuery,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
   });
 
   const review = useMutation({

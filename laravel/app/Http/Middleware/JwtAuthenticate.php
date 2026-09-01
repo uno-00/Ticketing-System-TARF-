@@ -37,6 +37,7 @@ class JwtAuthenticate
                 name: $user->name,
                 role: $user->role,
                 division: $user->division ?? '',
+                designation: $user->designation ?? '',
             );
 
             $request->attributes->set('authUser', $authUser);

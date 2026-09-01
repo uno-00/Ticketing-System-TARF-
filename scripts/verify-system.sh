@@ -39,22 +39,34 @@ else
   fail "Frontend proxy health" "Frontend health failed"
 fi
 
-if ADMIN_TOKEN="$(login "admin@nmp.gov.ph" "admin123")"; then
-  pass "Admin login"
+# Optional overrides for verification logins (museum org / PAMANA accounts).
+ADMIN_LOGIN="${NMP_VERIFY_ADMIN_LOGIN:-resty.morancil}"
+ADMIN_PASSWORD="${NMP_VERIFY_ADMIN_PASSWORD:-}"
+RECORDS_LOGIN="${NMP_VERIFY_RECORDS_LOGIN:-}"
+RECORDS_PASSWORD="${NMP_VERIFY_RECORDS_PASSWORD:-}"
+CLIENT_LOGIN="${NMP_VERIFY_CLIENT_LOGIN:-resty.morancil}"
+CLIENT_PASSWORD="${NMP_VERIFY_CLIENT_PASSWORD:-}"
+
+if ADMIN_TOKEN="$(login "$ADMIN_LOGIN" "${ADMIN_PASSWORD:-__missing__}")"; then
+  pass "Admin login ($ADMIN_LOGIN)"
 else
-  fail "Admin login" "No token returned"
+  fail "Admin login ($ADMIN_LOGIN)" "Set NMP_VERIFY_ADMIN_PASSWORD or use a valid PAMANA admin login"
 fi
 
-if RECORDS_TOKEN="$(login "records@nmp.gov.ph" "records123")"; then
-  pass "Records login"
+if [[ -n "$RECORDS_LOGIN" && -n "$RECORDS_PASSWORD" ]]; then
+  if RECORDS_TOKEN="$(login "$RECORDS_LOGIN" "$RECORDS_PASSWORD")"; then
+    pass "Records login ($RECORDS_LOGIN)"
+  else
+    fail "Records login ($RECORDS_LOGIN)" "No token returned"
+  fi
 else
-  fail "Records login" "No token returned"
+  echo "[SKIP] Records login — set NMP_VERIFY_RECORDS_LOGIN / NMP_VERIFY_RECORDS_PASSWORD"
 fi
 
-if CLIENT_TOKEN="$(login "user@nmp.gov.ph" "user123")"; then
-  pass "Client login"
+if CLIENT_TOKEN="$(login "$CLIENT_LOGIN" "${CLIENT_PASSWORD:-__missing__}")"; then
+  pass "Client login ($CLIENT_LOGIN)"
 else
-  fail "Client login" "No token returned"
+  fail "Client login ($CLIENT_LOGIN)" "Set NMP_VERIFY_CLIENT_PASSWORD or use a valid PAMANA client login"
 fi
 
 if [[ -n "$CLIENT_TOKEN" ]] && curl -sf --max-time 5 "$BASE/api/forms/published" \
@@ -97,7 +109,7 @@ fi
 
 if curl -sf --max-time 5 -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@nmp.gov.ph","password":"wrong-password"}' >/dev/null 2>&1; then
+  -d "{\"email\":\"$ADMIN_LOGIN\",\"password\":\"wrong-password\"}" >/dev/null 2>&1; then
   fail "Invalid login rejected" "Expected login failure"
 else
   pass "Invalid login rejected"

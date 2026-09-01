@@ -5,10 +5,15 @@ export const ADMIN_FORMS = "/admin/forms";
 export const ADMIN_MY_FORMS = "/admin/my-forms";
 export const ADMIN_APPROVALS = "/admin/approvals";
 export const ADMIN_REQUESTS = "/admin/requests";
+export const ADMIN_MY_REQUESTS = "/admin/my-requests";
+export const ADMIN_MY_REQUESTS_SUBMIT = "/admin/submit-request";
 export const ADMIN_ASSIGNED = "/admin/assigned";
 export const ADMIN_REPORTS = "/admin/reports";
 export const ADMIN_MESSAGES = "/admin/messages";
 export const ADMIN_SETTINGS = "/admin/settings";
+export const ADMIN_RBAC_USERS = "/admin/rbac/users";
+export const ADMIN_RBAC_ROLES = "/admin/rbac/roles";
+export const ADMIN_RBAC_PERMISSIONS = "/admin/rbac/permissions";
 
 export const RECORDS_DASHBOARD = "/records/dashboard";
 export const RECORDS_PENDING = "/records/pending";
@@ -35,7 +40,8 @@ export function isAdminRole(role: string | undefined) {
   return role === "admin";
 }
 export function isClientRole(role: string | undefined) {
-  return role === "user";
+  // Admins may also use the client portal to submit their own TA requests.
+  return role === "user" || role === "admin";
 }
 export function isRecordsRole(role: string | undefined) {
   return role === "record_management";

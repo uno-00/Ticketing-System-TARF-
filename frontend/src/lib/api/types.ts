@@ -6,6 +6,10 @@ export type ApiUser = {
   name: string;
   role: Role;
   division: string;
+  designation?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
 };
 
 export type FormStatus = "draft" | "pending_review" | "published" | "disapproved";
@@ -72,6 +76,7 @@ export type TicketRecord = {
   title: string;
   description: string;
   creatorName: string;
+  creatorEmail?: string;
   division: string;
   answers: Record<string, unknown>;
   attachmentUrl: string;
@@ -203,3 +208,44 @@ export type PokeRecord = {
 };
 
 export type FormReviewDecision = "approved" | "disapproved";
+
+export type RbacRole = {
+  id: number;
+  name: string;
+  description: string | null;
+  permissionCount?: number;
+  userCount?: number;
+  permissionIds?: number[];
+};
+
+export type RbacPermission = {
+  id: number;
+  name: string;
+  description: string | null;
+  category: string;
+  roleCount: number;
+};
+
+export type RbacEmployee = {
+  id: number;
+  name: string;
+  email: string;
+  username: string;
+  roles: Array<{ id: number; name: string }>;
+  hasRoles: boolean;
+};
+
+export type RbacEmployeesResponse = {
+  items: RbacEmployee[];
+  total: number;
+  page: number;
+  perPage: number;
+  from: number;
+  to: number;
+};
+
+export type RbacSummary = {
+  activeEmployees: number;
+  withRoles: number;
+  needsRoleAssignment: number;
+};

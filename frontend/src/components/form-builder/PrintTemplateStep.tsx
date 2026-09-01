@@ -65,7 +65,13 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
   const [fileDragOver, setFileDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const [templateNaturalWidth, setTemplateNaturalWidth] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setTemplateNaturalWidth(null);
+  }, [image]);
 
   const mergedPrintPreview = useMemo(
     () => buildPrintReadyText(draft.printTemplate ?? "", buildSampleSubmissionValues(draft.fields)),
@@ -567,15 +573,21 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                   </span>
                 </label>
               ) : (
-                <div className="print-canvas-shell max-h-[min(70vh,640px)] overflow-auto p-4">
+                <div
+                  ref={shellRef}
+                  className="print-canvas-shell max-h-[min(70vh,640px)] overflow-auto p-4"
+                >
                   <div className="mx-auto w-fit origin-top" style={{ transform: `scale(${zoom})` }}>
                     <div
                       ref={canvasRef}
-                      className="print-template-canvas relative inline-block overflow-hidden rounded-md bg-white shadow-md ring-1 ring-border"
+                      className="print-template-canvas relative inline-block max-w-full overflow-hidden rounded-md bg-white shadow-md ring-1 ring-border"
                       style={
                         {
                           "--dynamic-text-size": `${fieldFontSize}px`,
                           "--dynamic-text-width": `${fieldTextWidth}px`,
+                          ...(templateNaturalWidth
+                            ? { "--placement-natural-width": templateNaturalWidth }
+                            : {}),
                         } as React.CSSProperties
                       }
                       onDragOver={(e) => {
@@ -589,54 +601,67 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                         alt="Form template"
                         className="block max-w-full select-none"
                         draggable={false}
+                        onLoad={(e) => {
+                          const w = e.currentTarget.naturalWidth;
+                          if (w > 0) setTemplateNaturalWidth(w);
+                        }}
                       />
-                      {placements.map((p) => {
-                        const field = draft.fields.find((item) => item.variable === p.variable);
-                        const preview =
-                          field && isChoiceFieldType(field.type)
-                            ? resolvePlacementOption(field, p.label)
-                              ? PLACEMENT_CHECKMARK
-                              : ""
-                            : sampleValues[p.variable]?.replace(/\s*\(sample\)\s*$/i, "").trim() ||
-                              p.label;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className={cn(
-                              "dynamic-text-anchor",
-                              draggingId === p.id && "is-dragging",
-                            )}
-                            style={{ left: `${p.xPct}%`, top: `${p.yPct}%` }}
-                            title={`${p.variable} — ${preview}`}
-                            onPointerDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId);
-                              setDraggingId(p.id);
-                            }}
-                            onPointerUp={(e) => {
-                              try {
-                                (e.currentTarget as HTMLButtonElement).releasePointerCapture(
+                      <div
+                        className={cn(
+                          "absolute inset-0",
+                          templateNaturalWidth ? "placement-scale-root" : null,
+                        )}
+                      >
+                        {placements.map((p) => {
+                          const field = draft.fields.find((item) => item.variable === p.variable);
+                          const preview =
+                            field && isChoiceFieldType(field.type)
+                              ? resolvePlacementOption(field, p.label)
+                                ? PLACEMENT_CHECKMARK
+                                : ""
+                              : sampleValues[p.variable]?.replace(/\s*\(sample\)\s*$/i, "").trim() ||
+                                p.label;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              className={cn(
+                                "dynamic-text-anchor",
+                                draggingId === p.id && "is-dragging",
+                              )}
+                              style={{ left: `${p.xPct}%`, top: `${p.yPct}%` }}
+                              title={`${p.variable} — ${preview}`}
+                              onPointerDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                (e.currentTarget as HTMLButtonElement).setPointerCapture(
                                   e.pointerId,
                                 );
-                              } catch {
-                                /* noop */
-                              }
-                              setDraggingId(null);
-                            }}
-                          >
-                            <span
-                              className={cn(
-                                "dynamic-text",
-                                preview === PLACEMENT_CHECKMARK && "placement-checkmark",
-                              )}
+                                setDraggingId(p.id);
+                              }}
+                              onPointerUp={(e) => {
+                                try {
+                                  (e.currentTarget as HTMLButtonElement).releasePointerCapture(
+                                    e.pointerId,
+                                  );
+                                } catch {
+                                  /* noop */
+                                }
+                                setDraggingId(null);
+                              }}
                             >
-                              {preview}
-                            </span>
-                          </button>
-                        );
-                      })}
+                              <span
+                                className={cn(
+                                  "dynamic-text",
+                                  preview === PLACEMENT_CHECKMARK && "placement-checkmark",
+                                )}
+                              >
+                                {preview}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -88,7 +88,6 @@ export function MessengerPage({ slot, initialTicketId, initialConversationId }: 
   const { data: convData, isLoading: convLoading } = useQuery({
     queryKey: ["conversations", slot],
     queryFn: () => api.listConversations(slot),
-    refetchOnWindowFocus: true,
   });
 
   const conversations = convData?.items ?? [];
@@ -134,7 +133,6 @@ export function MessengerPage({ slot, initialTicketId, initialConversationId }: 
     queryKey: ["conversation-messages", selectedId, slot],
     queryFn: () => api.listConversationMessages(selectedId!, slot),
     enabled: Boolean(selectedId),
-    refetchOnWindowFocus: true,
   });
 
   const messages = msgData?.items ?? [];

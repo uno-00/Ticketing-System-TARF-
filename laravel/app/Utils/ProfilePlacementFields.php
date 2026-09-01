@@ -39,26 +39,20 @@ final class ProfilePlacementFields
     }
 
     /**
-     * @param  array{name?: string, email?: string, division?: string, firstName?: string, middleInitial?: string, lastName?: string, designation?: string}  $profile
+     * @param  array{name?: string, email?: string, division?: string, firstName?: string, middleName?: string, middleInitial?: string, lastName?: string, designation?: string}  $profile
      * @return array<string, string>
      */
     public static function buildRequesterProfileAnswerValues(array $profile): array
     {
+        // Use explicit PAMANA name parts only — do not invent first/middle/last from display name.
         $firstName = trim((string) ($profile['firstName'] ?? ''));
-        $middleInitial = trim((string) ($profile['middleInitial'] ?? ''));
+        $middleName = trim((string) ($profile['middleName'] ?? $profile['middleInitial'] ?? ''));
         $lastName = trim((string) ($profile['lastName'] ?? ''));
-
-        if ($firstName === '' && $lastName === '' && trim((string) ($profile['name'] ?? '')) !== '') {
-            $parsed = self::parseDisplayName((string) $profile['name']);
-            $firstName = $parsed['firstName'];
-            $middleInitial = $middleInitial !== '' ? $middleInitial : $parsed['middleInitial'];
-            $lastName = $parsed['lastName'];
-        }
 
         return [
             '{{prof_division}}' => trim((string) ($profile['division'] ?? '')),
             '{{prof_first}}' => $firstName,
-            '{{prof_middle}}' => $middleInitial,
+            '{{prof_middle}}' => $middleName,
             '{{prof_last}}' => $lastName,
             '{{prof_email}}' => trim((string) ($profile['email'] ?? '')),
             '{{prof_designation}}' => trim((string) ($profile['designation'] ?? '')),
@@ -66,12 +60,13 @@ final class ProfilePlacementFields
     }
 
     /**
-     * @param  array{name?: string, email?: string, division?: string}  $profile
+     * @param  array{name?: string, email?: string, division?: string, designation?: string}  $profile
      * @param  array<string, mixed>  $answers
      * @return array<string, mixed>
      */
     public static function mergeRequesterProfileIntoAnswers(array $profile, array $answers): array
     {
-        return array_merge(self::buildRequesterProfileAnswerValues($profile), $answers);
+        // Profile (PAMANA) wins over any client-supplied prof_* keys.
+        return array_merge($answers, self::buildRequesterProfileAnswerValues($profile));
     }
 }

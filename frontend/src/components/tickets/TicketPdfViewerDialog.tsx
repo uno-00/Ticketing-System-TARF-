@@ -35,7 +35,7 @@ export function TicketPdfViewerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] max-h-[90vh] w-[95vw] max-w-5xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] !w-screen !max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:!max-w-none">
         <DialogHeader className="border-b border-border/80 px-6 py-4 text-left">
           <DialogTitle>
             {ticketNumber ? `${ticketNumber} — Request file` : "Request file"}

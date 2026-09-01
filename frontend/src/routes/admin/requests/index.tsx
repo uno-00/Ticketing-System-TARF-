@@ -8,6 +8,7 @@ import {
   WorkspacePageHeader,
 } from "@/components/layout/workspace-ui";
 import { api } from "@/lib/api/client";
+import { getTicketDivision } from "@/lib/ticket-details";
 import { useAdminSession } from "@/lib/use-portal-session";
 
 export const Route = createFileRoute("/admin/requests/")({
@@ -20,8 +21,6 @@ function RequestsPage() {
     queryKey: ["all-tickets"],
     queryFn: () => api.listTickets(undefined, "admin"),
     enabled: canQuery,
-    refetchOnMount: "always",
-    staleTime: 0,
   });
 
   const items = data?.items ?? [];
@@ -71,7 +70,7 @@ function RequestsPage() {
                       <p className="text-xs text-muted-foreground">{t.formTitle}</p>
                     </td>
                     <td className="px-4 py-3.5 sm:px-5">{t.creatorName}</td>
-                    <td className="px-4 py-3.5 sm:px-5">{t.division || "—"}</td>
+                    <td className="px-4 py-3.5 sm:px-5">{getTicketDivision(t) || "—"}</td>
                     <td className="px-4 py-3.5 sm:px-5">
                       <StatusBadge status={t.status} />
                     </td>

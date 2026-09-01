@@ -10,6 +10,7 @@ export type UserDoc = {
   passwordHash: string;
   name: string;
   division: string;
+  designation: string;
   role: Role | string;
   active: boolean;
   createdAt: Date;
@@ -23,6 +24,7 @@ type UserRow = RowDataPacket & {
   password_hash: string;
   name: string;
   division: string;
+  designation?: string | null;
   role: string;
   active: number | boolean;
   created_at: Date | string;
@@ -50,6 +52,7 @@ function mapRow(row: UserRow): UserDoc {
     passwordHash: row.password_hash,
     name: row.name,
     division: row.division,
+    designation: row.designation ?? "",
     role: row.role,
     active: asBool(row.active),
     createdAt: asDateRequired(row.created_at),
@@ -57,13 +60,14 @@ function mapRow(row: UserRow): UserDoc {
     async save() {
       await execute(
         `UPDATE users SET email = :email, password_hash = :passwordHash, name = :name,
-         division = :division, role = :role, active = :active WHERE id = :id`,
+         division = :division, designation = :designation, role = :role, active = :active WHERE id = :id`,
         {
           id: doc._id,
           email: doc.email,
           passwordHash: doc.passwordHash,
           name: doc.name,
           division: doc.division,
+          designation: doc.designation ?? "",
           role: doc.role,
           active: doc.active ? 1 : 0,
         },
@@ -180,20 +184,22 @@ export const User = {
     passwordHash: string;
     name: string;
     division?: string;
+    designation?: string;
     role?: string;
     active?: boolean;
     password?: string;
   }): Promise<UserDoc> {
     const id = newId();
     await execute(
-      `INSERT INTO users (id, email, password_hash, name, division, role, active)
-       VALUES (:id, :email, :passwordHash, :name, :division, :role, :active)`,
+      `INSERT INTO users (id, email, password_hash, name, division, designation, role, active)
+       VALUES (:id, :email, :passwordHash, :name, :division, :designation, :role, :active)`,
       {
         id,
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash,
         name: data.name,
         division: data.division ?? "ICT",
+        designation: data.designation ?? "",
         role: data.role ?? "user",
         active: data.active === false ? 0 : 1,
       },

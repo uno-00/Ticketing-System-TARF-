@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, MessageCircle, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFeedbackPanel } from "@/components/client/ClientFeedbackPanel";
@@ -17,7 +16,7 @@ import {
 import { TicketRequestDetails } from "@/components/tickets/TicketRequestDetails";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
-import { CLIENT_FEEDBACK, CLIENT_MESSAGES, CLIENT_REQUESTS } from "@/lib/navigation";
+import { ADMIN_MESSAGES, ADMIN_MY_REQUESTS } from "@/lib/navigation";
 import { getClientFeedbackUrl } from "@/lib/feedback-config";
 import {
   ticketCanMarkComplete,
@@ -25,41 +24,44 @@ import {
   ticketReadyToClose,
 } from "@/lib/ticket-workflow";
 import { formatAssignedPersonnel } from "@/lib/utils";
+import { useAdminSession } from "@/lib/use-portal-session";
 
-export const Route = createFileRoute("/client/requests/$ticketId")({
-  component: TicketTrackPage,
+export const Route = createFileRoute("/admin/my-requests/$ticketId")({
+  component: AdminMyRequestDetailPage,
 });
 
-function TicketTrackPage() {
+function AdminMyRequestDetailPage() {
   const { ticketId } = Route.useParams();
+  const { canQuery } = useAdminSession();
   const qc = useQueryClient();
   const [comment, setComment] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["my-ticket", ticketId],
-    queryFn: () => api.getTicket(ticketId),
+    queryKey: ["my-ticket", "admin", ticketId],
+    queryFn: () => api.getTicket(ticketId, "admin"),
+    enabled: canQuery,
   });
 
   const confirm = useMutation({
     mutationFn: (satisfied: boolean) => api.confirmTicket(ticketId, satisfied),
     onSuccess: (_data, satisfied) => {
       toast.success(satisfied ? "Ticket closed" : "Request reopened");
-      void qc.invalidateQueries({ queryKey: ["my-ticket", ticketId] });
-      void qc.invalidateQueries({ queryKey: ["my-tickets"] });
+      void qc.invalidateQueries({ queryKey: ["my-ticket", "admin", ticketId] });
+      void qc.invalidateQueries({ queryKey: ["my-tickets", "admin"] });
     },
     onError: (err: Error) => toast.error(err.message || "Could not update request"),
   });
 
   const completeService = useMutation({
-    mutationFn: () => api.completeTicketService(ticketId),
+    mutationFn: () => api.completeTicketService(ticketId, "admin"),
     onSuccess: (result) => {
       const feedbackUrl = getClientFeedbackUrl(result.ticket);
       if (feedbackUrl) {
         window.open(feedbackUrl, "_blank", "noopener,noreferrer");
       }
       toast.success("Service marked complete — submit feedback using the link below");
-      void qc.invalidateQueries({ queryKey: ["my-ticket", ticketId] });
-      void qc.invalidateQueries({ queryKey: ["my-tickets"] });
+      void qc.invalidateQueries({ queryKey: ["my-ticket", "admin", ticketId] });
+      void qc.invalidateQueries({ queryKey: ["my-tickets", "admin"] });
     },
     onError: (err: Error) => toast.error(err.message || "Could not mark service complete"),
   });
@@ -68,8 +70,8 @@ function TicketTrackPage() {
     mutationFn: () => api.submitFeedback(ticketId, { comment: comment.trim() || undefined }),
     onSuccess: () => {
       toast.success("Feedback recorded — you can now close this request");
-      void qc.invalidateQueries({ queryKey: ["my-ticket", ticketId] });
-      void qc.invalidateQueries({ queryKey: ["my-tickets"] });
+      void qc.invalidateQueries({ queryKey: ["my-ticket", "admin", ticketId] });
+      void qc.invalidateQueries({ queryKey: ["my-tickets", "admin"] });
     },
     onError: (err: Error) => toast.error(err.message || "Could not record feedback"),
   });
@@ -77,7 +79,9 @@ function TicketTrackPage() {
   const ticket = data?.ticket;
   const activeTicket = feedback.data?.ticket ?? completeService.data?.ticket ?? ticket;
   const showFeedbackStep = activeTicket ? ticketNeedsFeedback(activeTicket) : false;
-  const showCompleteButton = activeTicket ? ticketCanMarkComplete(activeTicket) && !showFeedbackStep : false;
+  const showCompleteButton = activeTicket
+    ? ticketCanMarkComplete(activeTicket) && !showFeedbackStep
+    : false;
   const readyToClose = activeTicket ? ticketReadyToClose(activeTicket) : false;
   const showServicePanel = showCompleteButton || showFeedbackStep;
 
@@ -87,7 +91,7 @@ function TicketTrackPage() {
 
   return (
     <div className="page-shell">
-      <BackLink to={CLIENT_REQUESTS} label="Back to my requests" />
+      <BackLink to={ADMIN_MY_REQUESTS} label="Back to my requests" />
 
       <WorkspacePageHeader
         title={ticket.ticketNumber}
@@ -95,7 +99,7 @@ function TicketTrackPage() {
         meta={<StatusBadge status={activeTicket?.status ?? ticket.status} />}
         actions={
           activeTicket?.status !== "closed" ? (
-            <Link to={CLIENT_MESSAGES} search={{ ticket: ticketId }}>
+            <Link to={ADMIN_MESSAGES} search={{ ticket: ticketId }}>
               <Button size="sm" variant="outline" className="gap-1.5">
                 <MessageCircle className="h-4 w-4" />
                 Request messages
@@ -154,7 +158,9 @@ function TicketTrackPage() {
               {showFeedbackStep && activeTicket ? (
                 <div
                   className={
-                    showCompleteButton ? "feedback-reveal mt-5 border-t border-border/70 pt-5" : "feedback-reveal"
+                    showCompleteButton
+                      ? "feedback-reveal mt-5 border-t border-border/70 pt-5"
+                      : "feedback-reveal"
                   }
                 >
                   <ClientFeedbackPanel
@@ -164,12 +170,6 @@ function TicketTrackPage() {
                     onConfirm={() => feedback.mutate()}
                     isPending={feedback.isPending}
                   />
-                  <p className="mt-4 text-center text-xs text-muted-foreground sm:text-left">
-                    More pending requests?{" "}
-                    <Link to={CLIENT_FEEDBACK} className="font-medium text-maroon hover:underline">
-                      Service Feedback
-                    </Link>
-                  </p>
                 </div>
               ) : null}
             </ActionPanel>
