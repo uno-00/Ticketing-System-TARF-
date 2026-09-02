@@ -103,7 +103,7 @@ The TARF System provides a centralized platform for monitoring, managing, and tr
 
 2.2.6 **Personnel Assignment.** Admin users can assign approved tickets to ICT personnel. Assigned staff can track work under My Assignments.
 
-2.2.7 **Status Tracking.** Users can monitor ticket statuses such as Pending Approval, Approved, Rejected, Open, In Progress, Pending, Resolved, Closed, and Reopened.
+2.2.7 **Status Tracking.** Users can monitor ticket statuses such as Pending Approval, Open, Rejected, In Progress, Pending, Resolved, Closed, and Reopened.
 
 2.2.8 **Service Completion and Feedback.** The requestor can mark service complete, submit client satisfaction feedback, then close or reopen the request.
 
@@ -290,7 +290,7 @@ Upon login, the user is directed to the Dashboard for their portal. The Dashboar
 
 4.3.4 When rejecting, enter a reason and confirm with **Confirm reject**.
 
-4.3.5 After approval, assign ICT personnel using **Assign personnel**, then click **Assign**. The ticket moves to **In Progress** when assignment is completed as designed.
+4.3.5 After approval, the ticket status becomes **Open**. Assign ICT personnel using **Assign personnel**, then click **Assign**. The ticket moves to **In Progress**.
 
 **Figure 8 – Approvals**
 
@@ -482,14 +482,15 @@ Admin users may also act as requestors.
 | Status | Meaning |
 |--------|---------|
 | **Pending Approval** | Awaiting Admin approve or reject |
-| **Approved** | Approved; ready for assignment or processing |
-| **Rejected** | Rejected with reason |
-| **Open** | Active or assignable |
-| **In Progress** | ICT assigned; work ongoing |
-| **Pending** | Holding status set by Admin |
+| **Open** | Approved by Admin; ready for assignment or processing |
+| **Rejected** | Rejected with reason (terminal; submit a new request if needed) |
+| **In Progress** | ICT personnel assigned; work ongoing |
+| **Pending** | Holding status set by Admin after approval |
 | **Resolved** | Requestor marked service complete; feedback or close is next |
-| **Closed** | Closed after feedback |
-| **Reopened** | Reopened by requestor for further action |
+| **Closed** | Closed after feedback (requestor confirmed satisfied) |
+| **Reopened** | Reopened by requestor (not satisfied / needs further action) |
+
+**Note:** Clicking **Approve** on Approvals sets the ticket to **Open** (not a separate “Approved” status). Assigning ICT personnel then moves it to **In Progress**.
 
 ### 8.3 End-to-End Workflow Summary
 
@@ -501,11 +502,11 @@ Admin users may also act as requestors.
 
 **Phase 2 — Technical assistance request**
 
-8.3.4 Staff (or Admin as requestor) submits via Submit Request.  
-8.3.5 Admin approves or rejects the request on Approvals.  
-8.3.6 Admin assigns ICT personnel.  
-8.3.7 ICT performs the work under My Assignments.  
-8.3.8 Requestor marks service complete, submits feedback, then closes the ticket (or reopens it).
+8.3.4 Staff (or Admin as requestor) submits via Submit Request → status **Pending Approval**.  
+8.3.5 Admin approves on Approvals → status **Open** (or rejects → **Rejected**).  
+8.3.6 Admin assigns ICT personnel → status **In Progress**.  
+8.3.7 ICT performs the work under My Assignments (Admin may also set **Pending** as a hold).  
+8.3.8 Requestor marks service complete → **Resolved**, submits feedback, then closes (**Closed**) or reopens (**Reopened**).
 
 ---
 

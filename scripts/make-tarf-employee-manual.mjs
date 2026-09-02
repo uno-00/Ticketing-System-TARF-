@@ -363,7 +363,7 @@ const children = [
   item(
     "2.2.7",
     "Status Tracking",
-    "Users can monitor ticket statuses such as Pending Approval, Approved, Rejected, Open, In Progress, Pending, Resolved, Closed, and Reopened.",
+    "Users can monitor ticket statuses such as Pending Approval, Open, Rejected, In Progress, Pending, Resolved, Closed, and Reopened.",
   ),
   item(
     "2.2.8",
@@ -569,7 +569,7 @@ const children = [
   item(
     "4.3.5",
     "",
-    "After approval, assign ICT personnel using Assign personnel, then click Assign. The ticket moves to In Progress when assignment is completed as designed.",
+    "After approval, the ticket status becomes Open. Assign ICT personnel using Assign personnel, then click Assign. The ticket moves to In Progress.",
   ),
   fig("Figure 8 – Approvals"),
 
@@ -810,18 +810,33 @@ const children = [
 
   h2("8.2", "Ticket Statuses"),
   item("8.2.1", "Pending Approval", "Awaiting Admin approve or reject."),
-  item("8.2.2", "Approved", "Approved; ready for assignment or processing."),
-  item("8.2.3", "Rejected", "Rejected with reason."),
-  item("8.2.4", "Open", "Active or assignable."),
-  item("8.2.5", "In Progress", "ICT assigned; work ongoing."),
-  item("8.2.6", "Pending", "Holding status set by Admin."),
   item(
-    "8.2.7",
+    "8.2.2",
+    "Open",
+    "Approved by Admin; ready for assignment or processing. (Approve sets Open — there is no separate Approved ticket status.)",
+  ),
+  item(
+    "8.2.3",
+    "Rejected",
+    "Rejected with reason (terminal; submit a new request if needed).",
+  ),
+  item("8.2.4", "In Progress", "ICT personnel assigned; work ongoing."),
+  item("8.2.5", "Pending", "Holding status set by Admin after approval."),
+  item(
+    "8.2.6",
     "Resolved",
     "Requestor marked service complete; feedback or close is next.",
   ),
-  item("8.2.8", "Closed", "Closed after feedback."),
-  item("8.2.9", "Reopened", "Reopened by requestor for further action."),
+  item(
+    "8.2.7",
+    "Closed",
+    "Closed after feedback (requestor confirmed satisfied).",
+  ),
+  item(
+    "8.2.8",
+    "Reopened",
+    "Reopened by requestor (not satisfied / needs further action).",
+  ),
 
   h2("8.3", "End-to-End Workflow Summary"),
   p("Phase 1 — Form publishing:", { bold: true, after: 80 }),
@@ -840,15 +855,23 @@ const children = [
   item(
     "8.3.4",
     "",
-    "Staff (or Admin as requestor) submits via Submit Request.",
+    "Staff (or Admin as requestor) submits via Submit Request → Pending Approval.",
   ),
-  item("8.3.5", "", "Admin approves or rejects the request on Approvals."),
-  item("8.3.6", "", "Admin assigns ICT personnel."),
-  item("8.3.7", "", "ICT performs the work under My Assignments."),
+  item(
+    "8.3.5",
+    "",
+    "Admin approves on Approvals → Open (or rejects → Rejected).",
+  ),
+  item("8.3.6", "", "Admin assigns ICT personnel → In Progress."),
+  item(
+    "8.3.7",
+    "",
+    "ICT performs the work under My Assignments (Admin may also set Pending as a hold).",
+  ),
   item(
     "8.3.8",
     "",
-    "Requestor marks service complete, submits feedback, then closes the ticket (or reopens it).",
+    "Requestor marks service complete → Resolved, submits feedback, then closes (Closed) or reopens (Reopened).",
   ),
 
   // ——— 9 FAQ ———
