@@ -66,9 +66,12 @@ class TicketController extends Controller
         return response()->json($data);
     }
 
-    public function assignees(): JsonResponse
+    public function assignees(Request $request): JsonResponse
     {
-        return response()->json(['users' => $this->tickets->listAssignees()]);
+        $ticketId = $request->query('ticketId');
+        $ticketId = is_string($ticketId) && $ticketId !== '' ? $ticketId : null;
+
+        return response()->json($this->tickets->listAssignees($ticketId));
     }
 
     public function show(Request $request, string $id): JsonResponse

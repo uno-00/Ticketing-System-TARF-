@@ -62,7 +62,7 @@ class OrgUser extends Model
     }
 
     /**
-     * Map Spatie role names on this org user to TARF portal roles.
+     * Map Spatie role names on this org user to Support Ticketing System portal roles.
      *
      * @return 'admin'|'record_management'|'user'
      */

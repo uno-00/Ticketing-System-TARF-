@@ -154,7 +154,9 @@ export function PortalGateCard({
   return (
     <div className="gate-page">
       <div className="portal-gate-card page-transition-soft">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">NMP TARF</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">
+          Support Ticketing System
+        </p>
         <h1 className="mt-2 text-xl font-semibold text-foreground">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
         {children ? <div className="mt-5 flex flex-wrap justify-center gap-2">{children}</div> : null}

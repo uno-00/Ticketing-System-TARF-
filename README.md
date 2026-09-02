@@ -1,6 +1,6 @@
-# NMP Technical Assistance Request System
+# NMP Support Ticketing System
 
-Three-portal system for the National Museum of the Philippines technical assistance workflow.
+Three-portal support ticketing system for the National Museum of the Philippines.
 
 ## Portals
 

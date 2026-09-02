@@ -104,7 +104,7 @@ function RbacPermissionsPage() {
         title="Permission catalog"
         description={
           filtered.length === permissions.length
-            ? "Seeded from current TARF + existing capabilities"
+            ? "Seeded from current Support Ticketing System capabilities"
             : `${filtered.length} of ${permissions.length} shown`
         }
       >

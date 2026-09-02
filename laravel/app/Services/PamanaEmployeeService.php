@@ -380,7 +380,7 @@ class PamanaEmployeeService
         // Division/Section on TA form: section name from staffinformations (via section_id).
         $division = $sectionName !== '' ? $sectionName : $sectionId;
 
-        // Middle Initial box on TARF: first letter of middle_name.
+        // Middle Initial box on Support Ticketing System forms: first letter of middle_name.
         $middleInitial = $middle !== '' ? mb_strtoupper(mb_substr($middle, 0, 1)) : '';
 
         $nameParts = array_values(array_filter([$first, $middle, $last], fn ($p) => $p !== ''));

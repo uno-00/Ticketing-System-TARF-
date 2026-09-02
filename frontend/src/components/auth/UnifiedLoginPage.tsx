@@ -8,7 +8,7 @@ import { useApiHealth } from "@/lib/use-api-health";
 import { cn } from "@/lib/utils";
 import qualityPolicyBg from "@/assets/nmp-quality-policy.png";
 
-const REMEMBER_KEY = "nmp.tarf.rememberUsername";
+const REMEMBER_KEY = "nmp.support_ticketing.rememberUsername";
 
 export function UnifiedLoginPage() {
   const navigate = useNavigate();
@@ -74,7 +74,9 @@ export function UnifiedLoginPage() {
               <h1 className="text-[1.65rem] font-bold tracking-tight text-[#5c121c]">
                 Welcome Back
               </h1>
-              <p className="mt-1.5 text-[0.92rem] text-slate-500">Please log in to continue.</p>
+              <p className="mt-1.5 text-[0.92rem] text-slate-500">
+                Support Ticketing System — please log in to continue.
+              </p>
             </div>
 
             {apiHealth === "down" ? (

@@ -220,6 +220,17 @@ export async function assignTicket(actor: AuthUser, id: string, assigneeIds: str
   const users = await User.find({ _id: { $in: assigneeIds }, role: "admin", active: true });
   if (users.length === 0) throw new AppError(400, "No valid personnel to assign");
 
+  const ownerDivision = await formOwnerDivisionForTicket(ticket);
+  if (ownerDivision) {
+    const outside = users.filter((u) => !divisionsMatch(u.division ?? "", ownerDivision));
+    if (outside.length > 0) {
+      throw new AppError(
+        400,
+        `Personnel must belong to the form owner's division (${ownerDivision})`,
+      );
+    }
+  }
+
   ticket.assignedTo = assigneeIds;
   if (!["resolved", "closed"].includes(ticket.status)) {
     ticket.status = "in_progress";
@@ -373,9 +384,58 @@ export async function submitFeedback(
   return ticket;
 }
 
-export async function listAssignees() {
-  return User.find(
-    { role: "admin", active: true },
-    { sort: { name: 1 } },
-  );
+export async function listAssignees(ticketId?: string) {
+  let ownerDivision = "";
+  if (ticketId) {
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) throw new AppError(404, "Ticket not found");
+    ownerDivision = await formOwnerDivisionForTicket(ticket);
+  }
+
+  const filter: { role: string; active: boolean; division?: string } = {
+    role: "admin",
+    active: true,
+  };
+
+  // User.find may not support division filter — filter in memory if needed
+  let users = await User.find(filter, { sort: { name: 1 } });
+  if (ownerDivision) {
+    users = users.filter((u) => divisionsMatch(u.division ?? "", ownerDivision));
+  }
+
+  return {
+    users: users.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      division: u.division ?? "",
+    })),
+    division: ownerDivision,
+  };
+}
+
+function divisionsMatch(a: string, b: string) {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+async function formOwnerDivisionForTicket(ticket: { formId: string | { _id?: string } }) {
+  const formId =
+    typeof ticket.formId === "string"
+      ? ticket.formId
+      : ticket.formId && typeof ticket.formId === "object" && "_id" in ticket.formId
+        ? String((ticket.formId as { _id: string })._id)
+        : "";
+  if (!formId) return "";
+  const { Form } = await import("../models/Form.js");
+  const form = await Form.findById(formId, { populate: "createdBy" });
+  if (!form) return "";
+  const createdBy = form.createdBy;
+  if (createdBy && typeof createdBy === "object" && "division" in createdBy) {
+    return String((createdBy as { division?: string }).division ?? "").trim();
+  }
+  if (typeof createdBy === "string") {
+    const owner = await User.findById(createdBy);
+    return (owner?.division ?? "").trim();
+  }
+  return "";
 }

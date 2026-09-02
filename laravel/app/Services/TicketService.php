@@ -310,6 +310,19 @@ class TicketService
             throw new ApiException(400, 'No valid personnel to assign');
         }
 
+        $ownerDivision = $this->formOwnerDivisionForTicket($ticket);
+        if ($ownerDivision !== '') {
+            $outside = $users->filter(
+                fn (User $u) => ! $this->divisionsMatch((string) ($u->division ?? ''), $ownerDivision),
+            );
+            if ($outside->isNotEmpty()) {
+                throw new ApiException(
+                    400,
+                    'Personnel must belong to the form owner\'s division ('.$ownerDivision.')',
+                );
+            }
+        }
+
         $ids = $users->map(fn (User $u) => (string) $u->id)->all();
         $ticket->assignees()->sync($ids);
         if (! in_array($ticket->status, ['resolved', 'closed'], true)) {
@@ -491,13 +504,31 @@ class TicketService
     }
 
     /**
-     * @return list<array{id: string, email: string, name: string, role: string, division: string}>
+     * Active admin users available for assignment.
+     * When $ticketId is set, only admins from the form creator's division are returned
+     * (e.g. ICT form → ICT personnel only).
+     *
+     * @return array{users: list<array{_id: string, name: string, email: string, division: string}>, division: string}
      */
-    public function listAssignees(): array
+    public function listAssignees(?string $ticketId = null): array
     {
-        return User::query()
+        $query = User::query()
             ->where('role', 'admin')
-            ->where('active', true)
+            ->where('active', true);
+
+        $ownerDivision = '';
+        if ($ticketId) {
+            $ticket = Ticket::query()->find($ticketId);
+            if (! $ticket) {
+                throw new ApiException(404, 'Ticket not found');
+            }
+            $ownerDivision = $this->formOwnerDivisionForTicket($ticket);
+            if ($ownerDivision !== '') {
+                $query->whereRaw('LOWER(TRIM(division)) = ?', [mb_strtolower($ownerDivision)]);
+            }
+        }
+
+        $users = $query
             ->orderBy('name')
             ->get()
             ->map(fn (User $u) => [
@@ -507,5 +538,23 @@ class TicketService
                 'division' => $u->division ?? '',
             ])
             ->all();
+
+        return [
+            'users' => $users,
+            'division' => $ownerDivision,
+        ];
+    }
+
+    private function formOwnerDivisionForTicket(Ticket $ticket): string
+    {
+        $ticket->loadMissing('form.creator');
+        $division = trim((string) ($ticket->form?->creator?->division ?? ''));
+
+        return $division;
+    }
+
+    private function divisionsMatch(string $a, string $b): bool
+    {
+        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 }

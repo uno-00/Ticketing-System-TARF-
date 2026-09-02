@@ -191,7 +191,7 @@ class ConversationService
                     'subtitle' => $ticket
                         ? 'Client: '.$ticket->creator_name.' · Assigned: '.($assignees->isNotEmpty() ? $assignees->pluck('name')->implode(', ') : 'Awaiting assignment')
                         : 'Request thread',
-                    'threadParticipants' => 'TARF admin, client & assigned personnel',
+                    'threadParticipants' => 'Admin, client & assigned personnel',
                     'ticketStatus' => $ticket?->status,
                     'ticketTitle' => $ticket?->title ?? '',
                 ];
@@ -285,7 +285,7 @@ class ConversationService
                 'subtitle' => $ticket
                     ? 'Client: '.$ticket->creator_name.' · Assigned: '.($assignees->isNotEmpty() ? $assignees->pluck('name')->implode(', ') : 'Awaiting assignment')
                     : 'Request thread',
-                'threadParticipants' => 'TARF admin, client & assigned personnel',
+                'threadParticipants' => 'Admin, client & assigned personnel',
                 'isGlobal' => false,
                 'ticketId' => $ticketId,
                 'ticketStatus' => $ticket?->status,

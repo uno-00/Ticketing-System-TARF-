@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Upsert TARF ticketing permissions and ensure system roles have sensible defaults.
+ * Upsert Support Ticketing System permissions and ensure system roles have sensible defaults.
  * Keeps existing DMS permissions; adds/updates ticketing ones and role mappings.
  */
 class NmpRbacSeedCommand extends Command
 {
     protected $signature = 'nmp:rbac-seed {--fresh-ticketing : Re-apply ticketing permission sets on roles (merge)}';
 
-    protected $description = 'Populate roles & permissions from current TARF ticketing system capabilities';
+    protected $description = 'Populate roles & permissions from current Support Ticketing System capabilities';
 
     /** @var list<array{name: string, description: string, category: string}> */
     private const TICKETING_PERMISSIONS = [
@@ -52,7 +52,7 @@ class NmpRbacSeedCommand extends Command
     ];
 
     /**
-     * Portal / org roles that must exist for TARF.
+     * Portal / org roles that must exist for the Support Ticketing System.
      *
      * Admin = Section Head (ODG Section & Regional Component Museum) + Division Head (all except ODG).
      * Staff/User merged into `user` (shown as Staff in the UI).

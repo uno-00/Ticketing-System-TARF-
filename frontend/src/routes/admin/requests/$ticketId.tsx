@@ -44,9 +44,9 @@ function TicketDetailPage() {
     enabled: canQuery,
   });
   const { data: assigneeData } = useQuery({
-    queryKey: ["assignees"],
-    queryFn: () => api.listAssignees(),
-    enabled: canQuery,
+    queryKey: ["assignees", ticketId],
+    queryFn: () => api.listAssignees(ticketId),
+    enabled: canQuery && Boolean(ticketId),
   });
 
   const approve = useMutation({
@@ -198,7 +198,11 @@ function TicketDetailPage() {
               {canAssign ? (
               <ActionPanel
                 title="Assign personnel"
-                description="Select ICT personnel for this request. The client's division is shown below — ICT handles requests from all NMP offices."
+                description={
+                  assigneeData?.division
+                    ? `Only personnel from ${assigneeData.division} are listed — the same division as the admin who created this form.`
+                    : "Select personnel from the form owner's division for this request."
+                }
               >
                 <FlowNotice tone="info" title="Requestor's division">
                   <span className="font-medium text-foreground">
@@ -217,7 +221,11 @@ function TicketDetailPage() {
                   </p>
                 ) : null}
                 <div className="max-w-md space-y-2">
-                  <Label>ICT personnel (all divisions)</Label>
+                  <Label>
+                    {assigneeData?.division
+                      ? `${assigneeData.division} personnel`
+                      : "Personnel (form owner's division)"}
+                  </Label>
                   <div
                     className={cn(
                       "max-h-48 space-y-1 overflow-y-auto rounded-md border border-input bg-background p-2 shadow-sm",
@@ -251,7 +259,9 @@ function TicketDetailPage() {
                       })
                     ) : (
                       <p className="px-2 py-3 text-sm text-muted-foreground">
-                        No ICT personnel available.
+                        {assigneeData?.division
+                          ? `No active personnel found in ${assigneeData.division}.`
+                          : "No personnel available for this form's division."}
                       </p>
                     )}
                   </div>

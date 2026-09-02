@@ -18,7 +18,9 @@ function NotFoundComponent() {
   return (
     <div className="gate-page">
       <div className="gate-page-card">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">NMP TARF</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">
+          Support Ticketing System
+        </p>
         <p className="gate-page-code mt-4">404</p>
         <h2 className="mt-3 text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -44,7 +46,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="gate-page">
       <div className="gate-page-card">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">NMP TARF</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-maroon">
+          Support Ticketing System
+        </p>
         <h1 className="mt-4 text-xl font-semibold text-foreground">This page didn't load</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
@@ -76,16 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NMP Technical Assistance Request System" },
+      { title: "NMP Support Ticketing System" },
       {
         name: "description",
-        content: "National Museum of the Philippines technical assistance request ticketing.",
+        content: "National Museum of the Philippines Support Ticketing System.",
       },
       { name: "author", content: "National Museum of the Philippines" },
-      { property: "og:title", content: "NMP Technical Assistance Request System" },
+      { property: "og:title", content: "NMP Support Ticketing System" },
       {
         property: "og:description",
-        content: "National Museum of the Philippines technical assistance request ticketing.",
+        content: "National Museum of the Philippines Support Ticketing System.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

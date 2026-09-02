@@ -227,7 +227,7 @@ export function DashboardShell({
           </div>
           <div className="sidebar-brand-copy">
             <p className="sidebar-brand-eyebrow">National Museum of the Philippines</p>
-            <h2 className="sidebar-brand-title">TARF SYSTEM</h2>
+            <h2 className="sidebar-brand-title">Support Ticketing System</h2>
           </div>
         </div>
       </div>

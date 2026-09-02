@@ -260,7 +260,7 @@ export async function listConversations(user: AuthUser) {
         subtitle: ticket
           ? `Client: ${ticket.creatorName} · Assigned: ${assignees.length ? assignees.map((a) => a.name).join(", ") : "Awaiting assignment"}`
           : "Request thread",
-        threadParticipants: "TARF admin, client & assigned personnel",
+        threadParticipants: "Admin, client & assigned personnel",
         ticketStatus: ticket?.status ?? null,
         ticketTitle: ticket?.title ?? "",
       };
@@ -334,7 +334,7 @@ export async function getTicketConversation(user: AuthUser, ticketId: string) {
       subtitle: ticket
         ? `Client: ${ticket.creatorName} · Assigned: ${assignees.length ? assignees.map((a) => a.name).join(", ") : "Awaiting assignment"}`
         : "Request thread",
-      threadParticipants: "TARF admin, client & assigned personnel",
+      threadParticipants: "Admin, client & assigned personnel",
       isGlobal: false,
       ticketId,
       ticketStatus: ticket?.status ?? null,

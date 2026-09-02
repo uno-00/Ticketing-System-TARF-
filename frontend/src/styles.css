@@ -664,7 +664,7 @@
   }
 
   .sidebar-brand-title {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.25;
@@ -1902,7 +1902,7 @@
     container-type: inline-size;
   }
 
-  /* TARF printable field — size set via --dynamic-text-size */
+  /* Printable field — size set via --dynamic-text-size */
   .dynamic-text {
     display: inline-block;
     font-size: var(--dynamic-text-size, 10px);

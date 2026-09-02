@@ -63,7 +63,7 @@ async function getFormCreatorId(ticket: { formId: unknown }): Promise<string | n
   return idOf(form.createdBy);
 }
 
-/** Request thread: TARF admin (form creator) + client + assigned personnel. Never Records. */
+/** Request thread: admin (form creator) + client + assigned personnel. Never Records. */
 async function buildTicketParticipantIds(ticket: {
   creatorId: unknown;
   assignedTo: unknown[];

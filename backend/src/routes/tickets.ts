@@ -61,10 +61,11 @@ ticketsRouter.get("/", requireRoles("admin"), async (req, res, next) => {
   }
 });
 
-ticketsRouter.get("/assignees", requireRoles("admin"), async (_req, res, next) => {
+ticketsRouter.get("/assignees", requireRoles("admin"), async (req, res, next) => {
   try {
-    const users = await ticketService.listAssignees();
-    res.json({ users });
+    const ticketId = typeof req.query.ticketId === "string" ? req.query.ticketId : undefined;
+    const result = await ticketService.listAssignees(ticketId);
+    res.json(result);
   } catch (e) {
     next(e);
   }

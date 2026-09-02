@@ -218,12 +218,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  listAssignees: () =>
-    apiFetch<{ users: Array<{ _id: string; name: string; email: string; division: string }> }>(
-      "/api/tickets/assignees",
-      undefined,
-      "admin",
-    ),
+  listAssignees: (ticketId: string) =>
+    apiFetch<{
+      users: Array<{ _id: string; name: string; email: string; division: string }>;
+      division: string;
+    }>(`/api/tickets/assignees?ticketId=${encodeURIComponent(ticketId)}`, undefined, "admin"),
 
   listMessageableUsers: (slot?: PortalSlot) =>
     apiFetch<{ users: MessageableUser[] }>("/api/messages/users", undefined, slot),

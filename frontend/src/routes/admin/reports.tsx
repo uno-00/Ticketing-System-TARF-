@@ -41,7 +41,7 @@ function ReportsPage() {
     <div className="page-shell">
       <WorkspacePageHeader
         title="Reports & Analytics"
-        description="Overview of request volume, completion, and client feedback across the TARF workflow."
+        description="Overview of request volume, completion, and client feedback across the Support Ticketing System workflow."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
