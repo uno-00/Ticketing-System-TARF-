@@ -159,7 +159,7 @@ const children = [
     alignment: AlignmentType.CENTER,
     children: [
       new TextRun({
-        text: "PAMANA: TARF",
+        text: "TARF System",
         font: "Times New Roman",
         size: 44,
         bold: true,
@@ -172,7 +172,7 @@ const children = [
     alignment: AlignmentType.CENTER,
     children: [
       new TextRun({
-        text: "Technical Assistance Request Form System",
+        text: "Technical Assistance Request Form Support Ticketing System",
         font: "Times New Roman",
         size: 24,
         italics: true,
@@ -268,10 +268,10 @@ const children = [
   h1("1", "Introduction"),
   h2("1.1", "Overview"),
   p(
-    "The Technical Assistance Request Form (TARF) System is a centralized platform of the National Museum of the Philippines (NMP). It supports the creation, review, submission, approval, assignment, and completion of technical assistance (TA) requests.",
+    "The Technical Assistance Request Form (TARF) System is the support ticketing platform of the National Museum of the Philippines (NMP). It supports the creation, review, submission, approval, assignment, and completion of technical assistance (TA) requests.",
   ),
   p(
-    "Through the Admin, Records, and Client portals, authorized users can build and publish TA forms, review form templates, submit TA requests with requestor details auto-filled from PAMANA, approve and assign work to ICT personnel, and track service completion, feedback, and closure.",
+    "Through the Admin, Records, and Client portals, authorized users can build and publish TA forms, review form templates, submit TA requests with requestor details auto-filled from the PAMANA employee directory, approve and assign work to ICT personnel, and track service completion, feedback, and closure.",
   ),
 
   h2("1.2", "Purpose of this Manual"),
@@ -921,7 +921,7 @@ const doc = new Document({
               tabStops: [{ type: "right", position: H(6.5) }],
               children: [
                 new TextRun({
-                  text: "PAMANA: TARF",
+                  text: "TARF System",
                   font: "Times New Roman",
                   size: 18,
                   bold: true,
@@ -962,7 +962,7 @@ const doc = new Document({
 });
 
 const outDocx =
-  "/home/ysa/dev/National-Museum-SupportTicketing-System/docs/PAMANA_TARF_Employee_User_Manual_V1.docx";
+  "/home/ysa/dev/National-Museum-SupportTicketing-System/docs/TARF_Employee_User_Manual_V1.docx";
 
 const buf = await Packer.toBuffer(doc);
 fs.writeFileSync(outDocx, buf);

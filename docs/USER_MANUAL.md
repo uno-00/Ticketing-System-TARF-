@@ -1,8 +1,8 @@
-# PAMANA: TARF  
+# TARF System  
 # Employee User Manual V1.0
 
 **National Museum of the Philippines**  
-**Technical Assistance Request Form (TARF) System**
+**Technical Assistance Request Form (TARF) Support Ticketing System**
 
 Version 1.0 · September 2026
 
@@ -55,9 +55,9 @@ Version 1.0 · September 2026
 
 ### 1.1 Overview
 
-The **Technical Assistance Request Form (TARF) System** is a centralized platform of the National Museum of the Philippines (NMP). It supports the creation, review, submission, approval, assignment, and completion of technical assistance (TA) requests.
+The **Technical Assistance Request Form (TARF) System** is the support ticketing platform of the National Museum of the Philippines (NMP). It supports the creation, review, submission, approval, assignment, and completion of technical assistance (TA) requests.
 
-Through the Admin, Records, and Client portals, authorized users can build and publish TA forms, review form templates, submit TA requests with requestor details auto-filled from PAMANA, approve and assign work to ICT personnel, and track service completion, feedback, and closure.
+Through the Admin, Records, and Client portals, authorized users can build and publish TA forms, review form templates, submit TA requests with requestor details auto-filled from the PAMANA employee directory, approve and assign work to ICT personnel, and track service completion, feedback, and closure.
 
 ### 1.2 Purpose of this Manual
 
