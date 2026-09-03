@@ -1,4 +1,4 @@
-export type Role = "admin" | "record_management" | "user";
+export type Role = "super_admin" | "admin" | "record_management" | "user";
 
 export type ApiUser = {
   id: string;

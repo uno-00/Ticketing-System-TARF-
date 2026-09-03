@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { ADMIN_DASHBOARD } from "@/lib/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { KeyRound, Layers3, Search, Shield } from "lucide-react";
@@ -16,6 +17,9 @@ import type { RbacPermission } from "@/lib/api/types";
 import { useAdminSession } from "@/lib/use-portal-session";
 
 export const Route = createFileRoute("/admin/rbac/permissions")({
+  beforeLoad: () => {
+    throw redirect({ to: ADMIN_DASHBOARD, replace: true });
+  },
   component: RbacPermissionsPage,
 });
 
@@ -30,7 +34,7 @@ function groupPermissions(permissions: RbacPermission[]) {
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
-function RbacPermissionsPage() {
+export function RbacPermissionsPage() {
   const { canQuery } = useAdminSession();
   const [search, setSearch] = useState("");
 

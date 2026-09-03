@@ -149,7 +149,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  recordsActivity: () => apiFetch<{ items: ActivityRecord[] }>("/api/records/activity"),
+  recordsActivity: (slot?: PortalSlot) =>
+    apiFetch<{ items: ActivityRecord[] }>("/api/records/activity", undefined, slot),
 
   // Tickets
   createTicket: (body: object, slot?: PortalSlot) =>
@@ -223,6 +224,34 @@ export const api = {
       users: Array<{ _id: string; name: string; email: string; division: string }>;
       division: string;
     }>(`/api/tickets/assignees?ticketId=${encodeURIComponent(ticketId)}`, undefined, "admin"),
+
+  superAdminOverview: () =>
+    apiFetch<{
+      users: {
+        total: number;
+        superAdmins: number;
+        admins: number;
+        records: number;
+        staff: number;
+      };
+      forms: {
+        draft: number;
+        pendingReview: number;
+        published: number;
+        disapproved: number;
+      };
+      tickets: {
+        pendingApproval: number;
+        open: number;
+        inProgress: number;
+        pending: number;
+        resolved: number;
+        closed: number;
+        reopened: number;
+        rejected: number;
+      };
+      recentActivities: ActivityRecord[];
+    }>("/api/super-admin/overview", undefined, "admin"),
 
   listMessageableUsers: (slot?: PortalSlot) =>
     apiFetch<{ users: MessageableUser[] }>("/api/messages/users", undefined, slot),

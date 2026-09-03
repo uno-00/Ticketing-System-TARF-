@@ -4,19 +4,19 @@ import { KeyRound, Shield, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { WorkspacePageHeader } from "@/components/layout/workspace-ui";
 import {
-  ADMIN_DASHBOARD,
-  ADMIN_RBAC_PERMISSIONS,
-  ADMIN_RBAC_ROLES,
-  ADMIN_RBAC_USERS,
+  SUPER_ADMIN_DASHBOARD,
+  SUPER_ADMIN_PERMISSIONS,
+  SUPER_ADMIN_ROLES,
+  SUPER_ADMIN_USERS,
 } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 export type RbacSection = "users" | "roles" | "permissions";
 
 const SECTIONS: Array<{ id: RbacSection; label: string; to: string }> = [
-  { id: "users", label: "Users", to: ADMIN_RBAC_USERS },
-  { id: "roles", label: "Roles", to: ADMIN_RBAC_ROLES },
-  { id: "permissions", label: "Permissions", to: ADMIN_RBAC_PERMISSIONS },
+  { id: "users", label: "Users", to: SUPER_ADMIN_USERS },
+  { id: "roles", label: "Roles", to: SUPER_ADMIN_ROLES },
+  { id: "permissions", label: "Permissions", to: SUPER_ADMIN_PERMISSIONS },
 ];
 
 const ROLE_DISPLAY_LABELS: Record<string, string> = {
@@ -130,7 +130,7 @@ export function RbacShell({
   return (
     <div className="page-shell">
       <nav className="mb-2 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-        <Link to={ADMIN_DASHBOARD} className="hover:text-foreground">
+        <Link to={SUPER_ADMIN_DASHBOARD} className="hover:text-foreground">
           Home
         </Link>
         <span aria-hidden>/</span>

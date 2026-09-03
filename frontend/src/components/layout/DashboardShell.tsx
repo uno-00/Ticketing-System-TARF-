@@ -1,12 +1,30 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LogOut, Menu, Settings, X, type LucideIcon } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  ClipboardList,
+  LogOut,
+  Menu,
+  Settings,
+  Shield,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NmpLogo } from "@/components/layout/NmpLogo";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { useAuth } from "@/lib/auth";
 import type { NotificationItem } from "@/lib/notifications";
-import { LOGIN, settingsPathForSlot } from "@/lib/navigation";
+import {
+  ADMIN_DASHBOARD,
+  CLIENT_DASHBOARD,
+  isSuperAdminRole,
+  LOGIN,
+  RECORDS_DASHBOARD,
+  settingsPathForSlot,
+} from "@/lib/navigation";
 import { pathToSlot } from "@/lib/sessions";
 import { cn } from "@/lib/utils";
 
@@ -209,11 +227,82 @@ export function DashboardShell({
 
   const signOut = () => {
     setProfileOpen(false);
-    if (activeSlot) {
+    if (!activeSlot) return;
+    // Super Admin sessions are seeded on all portals — clear them together.
+    if (isSuperAdminRole(user?.role)) {
+      logout("admin");
+      logout("records");
+      logout("client");
+    } else {
       logout(activeSlot);
-      void navigate({ to: LOGIN, replace: true });
     }
+    void navigate({ to: LOGIN, replace: true });
   };
+
+  const portalSwitcher =
+    isSuperAdminRole(user?.role) && !pathname.startsWith("/super-admin") ? (
+      <div className="sidebar-nav-section">
+        <button type="button" className="sidebar-nav-section-toggle" disabled>
+          <span>SWITCH PORTAL</span>
+        </button>
+        <div className="sidebar-nav-section-items space-y-0.5">
+          {(
+            [
+              {
+                to: "/super-admin/dashboard",
+                label: "Super Admin",
+                icon: Shield,
+                match: (p: string) => p.startsWith("/super-admin"),
+              },
+              {
+                to: ADMIN_DASHBOARD,
+                label: "Admin",
+                icon: Building2,
+                match: (p: string) => p.startsWith("/admin"),
+              },
+              {
+                to: RECORDS_DASHBOARD,
+                label: "Records",
+                icon: ClipboardList,
+                match: (p: string) => p.startsWith("/records"),
+              },
+              {
+                to: CLIENT_DASHBOARD,
+                label: "Staff",
+                icon: Users,
+                match: (p: string) => p.startsWith("/client"),
+              },
+            ] as const
+          ).map((item) => {
+            const active = item.match(pathname);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "sidebar-nav-active"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                )}
+              >
+                <span
+                  className={cn(
+                    "sidebar-nav-icon",
+                    active ? "sidebar-nav-icon-active" : "sidebar-nav-icon-idle",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
 
   const sidebar = (
     <div className="flex h-full min-h-0 flex-col bg-card">
@@ -233,6 +322,7 @@ export function DashboardShell({
       </div>
 
       <nav className="workspace-sidebar-nav workspace-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-6 py-4">
+        {portalSwitcher}
         {renderNavSections()}
       </nav>
 
@@ -246,7 +336,9 @@ export function DashboardShell({
               : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
           )}
           onClick={() => {
-            const to = settingsPathForSlot(activeSlot);
+            const to = pathname.startsWith("/super-admin")
+              ? "/super-admin/settings"
+              : settingsPathForSlot(activeSlot);
             void navigate({ to });
           }}
         >

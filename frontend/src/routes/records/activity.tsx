@@ -13,7 +13,7 @@ export const Route = createFileRoute("/records/activity")({
   component: ActivityLogsPage,
 });
 
-function ActivityLogsPage() {
+export function ActivityLogsPage() {
   const { canQuery } = useRecordsSession();
   const { data, isLoading } = useQuery({
     queryKey: ["records-activity"],

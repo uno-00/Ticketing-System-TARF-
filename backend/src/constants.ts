@@ -1,4 +1,4 @@
-export const ROLES = ["admin", "record_management", "user"] as const;
+export const ROLES = ["super_admin", "admin", "record_management", "user"] as const;
 export type Role = (typeof ROLES)[number];
 
 /** Form definition lifecycle (Admin → Records) */

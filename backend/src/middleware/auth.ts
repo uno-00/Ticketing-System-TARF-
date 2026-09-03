@@ -60,6 +60,8 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
 export function requireRoles(...roles: Role[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) return next(new AppError(401, "Authentication required"));
+    // Super Admin may use Admin, Records, and Staff APIs.
+    if (req.user.role === "super_admin") return next();
     if (!roles.includes(req.user.role)) {
       return next(new AppError(403, "Insufficient permissions"));
     }

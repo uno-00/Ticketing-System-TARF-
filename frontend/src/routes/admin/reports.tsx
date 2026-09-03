@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin/reports")({
   component: ReportsPage,
 });
 
-function ReportsPage() {
+export function ReportsPage() {
   const { canQuery } = useAdminSession();
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["report-tickets"],

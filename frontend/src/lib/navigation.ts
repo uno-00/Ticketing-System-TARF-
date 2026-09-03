@@ -1,5 +1,16 @@
 export const LOGIN = "/login";
 
+export const SUPER_ADMIN_DASHBOARD = "/super-admin/dashboard";
+export const SUPER_ADMIN_REPORTS = "/super-admin/reports";
+export const SUPER_ADMIN_USERS = "/super-admin/users";
+export const SUPER_ADMIN_ROLES = "/super-admin/roles";
+export const SUPER_ADMIN_PERMISSIONS = "/super-admin/permissions";
+export const SUPER_ADMIN_SETTINGS = "/super-admin/settings";
+export const SUPER_ADMIN_PROFILE = "/super-admin/profile";
+export const SUPER_ADMIN_FORMS = "/super-admin/forms";
+export const SUPER_ADMIN_ACTIVITY = "/super-admin/activity";
+export const SUPER_ADMIN_NOTIFICATIONS = "/super-admin/notifications";
+
 export const ADMIN_DASHBOARD = "/admin/dashboard";
 export const ADMIN_FORMS = "/admin/forms";
 export const ADMIN_MY_FORMS = "/admin/my-forms";
@@ -11,9 +22,6 @@ export const ADMIN_ASSIGNED = "/admin/assigned";
 export const ADMIN_REPORTS = "/admin/reports";
 export const ADMIN_MESSAGES = "/admin/messages";
 export const ADMIN_SETTINGS = "/admin/settings";
-export const ADMIN_RBAC_USERS = "/admin/rbac/users";
-export const ADMIN_RBAC_ROLES = "/admin/rbac/roles";
-export const ADMIN_RBAC_PERMISSIONS = "/admin/rbac/permissions";
 
 export const RECORDS_DASHBOARD = "/records/dashboard";
 export const RECORDS_PENDING = "/records/pending";
@@ -36,21 +44,26 @@ export function settingsPathForSlot(slot: "admin" | "records" | "client" | null 
   return LOGIN;
 }
 
+export function isSuperAdminRole(role: string | undefined) {
+  return role === "super_admin";
+}
+
 export function isAdminRole(role: string | undefined) {
-  return role === "admin";
+  return role === "admin" || role === "super_admin";
 }
 export function isClientRole(role: string | undefined) {
-  // Admins may also use the client portal to submit their own TA requests.
-  return role === "user" || role === "admin";
+  // Admins and Super Admin may also use the client portal to submit their own TA requests.
+  return role === "user" || role === "admin" || role === "super_admin";
 }
 export function isRecordsRole(role: string | undefined) {
-  return role === "record_management";
+  return role === "record_management" || role === "super_admin";
 }
 
 /** After unified login, redirect by role */
 export function dashboardForRole(role: string): string {
-  if (isAdminRole(role)) return ADMIN_DASHBOARD;
-  if (isRecordsRole(role)) return RECORDS_DASHBOARD;
+  if (isSuperAdminRole(role)) return SUPER_ADMIN_DASHBOARD;
+  if (role === "admin") return ADMIN_DASHBOARD;
+  if (role === "record_management") return RECORDS_DASHBOARD;
   if (isClientRole(role)) return CLIENT_DASHBOARD;
   return LOGIN;
 }

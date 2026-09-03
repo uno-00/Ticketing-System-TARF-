@@ -15,12 +15,13 @@ const LEGACY_TOKEN_KEY = "nmp_api_token";
 const LEGACY_USER_KEY = "nmp_api_user";
 
 export function roleToSlot(role: string): PortalSlot {
-  if (role === "admin") return "admin";
+  if (role === "super_admin" || role === "admin") return "admin";
   if (role === "record_management") return "records";
   return "client";
 }
 
 export function pathToSlot(pathname: string): PortalSlot | null {
+  if (pathname.startsWith("/super-admin")) return "admin";
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/records")) return "records";
   if (pathname.startsWith("/client")) return "client";
@@ -88,7 +89,11 @@ export function getSession(slot: PortalSlot): PortalSession | null {
   return session;
 }
 
-export function setSession(slot: PortalSlot, session: PortalSession | null) {
+export function setSession(
+  slot: PortalSlot,
+  session: PortalSession | null,
+  options?: { notify?: boolean },
+) {
   const store = readStore();
   if (session) {
     store[slot] = session;
@@ -96,7 +101,11 @@ export function setSession(slot: PortalSlot, session: PortalSession | null) {
     delete store[slot];
   }
   writeStore(store);
-  notifySessionChanged(slot);
+  // Default notify=true for login/logout. Pass notify:false when refreshing
+  // user from /auth/me so AuthProvider sync does not loop forever.
+  if (options?.notify !== false) {
+    notifySessionChanged(slot);
+  }
 }
 
 export function listSessions(): Array<{ slot: PortalSlot; user: ApiUser }> {

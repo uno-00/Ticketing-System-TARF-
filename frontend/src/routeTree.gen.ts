@@ -10,11 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserRouteImport } from './routes/user'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SuperAdminUsersRouteImport } from './routes/super-admin/users'
+import { Route as SuperAdminSettingsRouteImport } from './routes/super-admin/settings'
+import { Route as SuperAdminRolesRouteImport } from './routes/super-admin/roles'
+import { Route as SuperAdminReportsRouteImport } from './routes/super-admin/reports'
+import { Route as SuperAdminProfileRouteImport } from './routes/super-admin/profile'
+import { Route as SuperAdminPermissionsRouteImport } from './routes/super-admin/permissions'
+import { Route as SuperAdminNotificationsRouteImport } from './routes/super-admin/notifications'
+import { Route as SuperAdminFormsRouteImport } from './routes/super-admin/forms'
+import { Route as SuperAdminDashboardRouteImport } from './routes/super-admin/dashboard'
+import { Route as SuperAdminActivityRouteImport } from './routes/super-admin/activity'
 import { Route as RecordsSettingsRouteImport } from './routes/records/settings'
 import { Route as RecordsPublishedRouteImport } from './routes/records/published'
 import { Route as RecordsPendingRouteImport } from './routes/records/pending'
@@ -55,6 +66,11 @@ const UserRoute = UserRouteImport.update({
   path: '/user',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
@@ -79,6 +95,56 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminUsersRoute = SuperAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminSettingsRoute = SuperAdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminRolesRoute = SuperAdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminReportsRoute = SuperAdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminProfileRoute = SuperAdminProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminPermissionsRoute = SuperAdminPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminNotificationsRoute = SuperAdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminFormsRoute = SuperAdminFormsRouteImport.update({
+  id: '/forms',
+  path: '/forms',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminDashboardRoute = SuperAdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminActivityRoute = SuperAdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => SuperAdminRoute,
 } as any)
 const RecordsSettingsRoute = RecordsSettingsRouteImport.update({
   id: '/settings',
@@ -257,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
   '/records': typeof RecordsRouteWithChildren
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/user': typeof UserRoute
   '/admin/approvals': typeof AdminApprovalsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -281,6 +348,16 @@ export interface FileRoutesByFullPath {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/super-admin/activity': typeof SuperAdminActivityRoute
+  '/super-admin/dashboard': typeof SuperAdminDashboardRoute
+  '/super-admin/forms': typeof SuperAdminFormsRoute
+  '/super-admin/notifications': typeof SuperAdminNotificationsRoute
+  '/super-admin/permissions': typeof SuperAdminPermissionsRoute
+  '/super-admin/profile': typeof SuperAdminProfileRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/roles': typeof SuperAdminRolesRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/users': typeof SuperAdminUsersRoute
   '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
   '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
   '/admin/rbac/roles': typeof AdminRbacRolesRoute
@@ -299,6 +376,7 @@ export interface FileRoutesByTo {
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
   '/records': typeof RecordsRouteWithChildren
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/user': typeof UserRoute
   '/admin/approvals': typeof AdminApprovalsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -323,6 +401,16 @@ export interface FileRoutesByTo {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/super-admin/activity': typeof SuperAdminActivityRoute
+  '/super-admin/dashboard': typeof SuperAdminDashboardRoute
+  '/super-admin/forms': typeof SuperAdminFormsRoute
+  '/super-admin/notifications': typeof SuperAdminNotificationsRoute
+  '/super-admin/permissions': typeof SuperAdminPermissionsRoute
+  '/super-admin/profile': typeof SuperAdminProfileRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/roles': typeof SuperAdminRolesRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/users': typeof SuperAdminUsersRoute
   '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
   '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
   '/admin/rbac/roles': typeof AdminRbacRolesRoute
@@ -342,6 +430,7 @@ export interface FileRoutesById {
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
   '/records': typeof RecordsRouteWithChildren
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/user': typeof UserRoute
   '/admin/approvals': typeof AdminApprovalsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -366,6 +455,16 @@ export interface FileRoutesById {
   '/records/pending': typeof RecordsPendingRoute
   '/records/published': typeof RecordsPublishedRoute
   '/records/settings': typeof RecordsSettingsRoute
+  '/super-admin/activity': typeof SuperAdminActivityRoute
+  '/super-admin/dashboard': typeof SuperAdminDashboardRoute
+  '/super-admin/forms': typeof SuperAdminFormsRoute
+  '/super-admin/notifications': typeof SuperAdminNotificationsRoute
+  '/super-admin/permissions': typeof SuperAdminPermissionsRoute
+  '/super-admin/profile': typeof SuperAdminProfileRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/roles': typeof SuperAdminRolesRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/users': typeof SuperAdminUsersRoute
   '/admin/my-requests/$ticketId': typeof AdminMyRequestsTicketIdRoute
   '/admin/rbac/permissions': typeof AdminRbacPermissionsRoute
   '/admin/rbac/roles': typeof AdminRbacRolesRoute
@@ -386,6 +485,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/login'
     | '/records'
+    | '/super-admin'
     | '/user'
     | '/admin/approvals'
     | '/admin/dashboard'
@@ -410,6 +510,16 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/super-admin/activity'
+    | '/super-admin/dashboard'
+    | '/super-admin/forms'
+    | '/super-admin/notifications'
+    | '/super-admin/permissions'
+    | '/super-admin/profile'
+    | '/super-admin/reports'
+    | '/super-admin/roles'
+    | '/super-admin/settings'
+    | '/super-admin/users'
     | '/admin/my-requests/$ticketId'
     | '/admin/rbac/permissions'
     | '/admin/rbac/roles'
@@ -428,6 +538,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/login'
     | '/records'
+    | '/super-admin'
     | '/user'
     | '/admin/approvals'
     | '/admin/dashboard'
@@ -452,6 +563,16 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/super-admin/activity'
+    | '/super-admin/dashboard'
+    | '/super-admin/forms'
+    | '/super-admin/notifications'
+    | '/super-admin/permissions'
+    | '/super-admin/profile'
+    | '/super-admin/reports'
+    | '/super-admin/roles'
+    | '/super-admin/settings'
+    | '/super-admin/users'
     | '/admin/my-requests/$ticketId'
     | '/admin/rbac/permissions'
     | '/admin/rbac/roles'
@@ -470,6 +591,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/login'
     | '/records'
+    | '/super-admin'
     | '/user'
     | '/admin/approvals'
     | '/admin/dashboard'
@@ -494,6 +616,16 @@ export interface FileRouteTypes {
     | '/records/pending'
     | '/records/published'
     | '/records/settings'
+    | '/super-admin/activity'
+    | '/super-admin/dashboard'
+    | '/super-admin/forms'
+    | '/super-admin/notifications'
+    | '/super-admin/permissions'
+    | '/super-admin/profile'
+    | '/super-admin/reports'
+    | '/super-admin/roles'
+    | '/super-admin/settings'
+    | '/super-admin/users'
     | '/admin/my-requests/$ticketId'
     | '/admin/rbac/permissions'
     | '/admin/rbac/roles'
@@ -513,6 +645,7 @@ export interface RootRouteChildren {
   ClientRoute: typeof ClientRouteWithChildren
   LoginRoute: typeof LoginRoute
   RecordsRoute: typeof RecordsRouteWithChildren
+  SuperAdminRoute: typeof SuperAdminRouteWithChildren
   UserRoute: typeof UserRoute
 }
 
@@ -523,6 +656,13 @@ declare module '@tanstack/react-router' {
       path: '/user'
       fullPath: '/user'
       preLoaderRoute: typeof UserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/records': {
@@ -559,6 +699,76 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/super-admin/users': {
+      id: '/super-admin/users'
+      path: '/users'
+      fullPath: '/super-admin/users'
+      preLoaderRoute: typeof SuperAdminUsersRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/settings': {
+      id: '/super-admin/settings'
+      path: '/settings'
+      fullPath: '/super-admin/settings'
+      preLoaderRoute: typeof SuperAdminSettingsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/roles': {
+      id: '/super-admin/roles'
+      path: '/roles'
+      fullPath: '/super-admin/roles'
+      preLoaderRoute: typeof SuperAdminRolesRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/reports': {
+      id: '/super-admin/reports'
+      path: '/reports'
+      fullPath: '/super-admin/reports'
+      preLoaderRoute: typeof SuperAdminReportsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/profile': {
+      id: '/super-admin/profile'
+      path: '/profile'
+      fullPath: '/super-admin/profile'
+      preLoaderRoute: typeof SuperAdminProfileRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/permissions': {
+      id: '/super-admin/permissions'
+      path: '/permissions'
+      fullPath: '/super-admin/permissions'
+      preLoaderRoute: typeof SuperAdminPermissionsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/notifications': {
+      id: '/super-admin/notifications'
+      path: '/notifications'
+      fullPath: '/super-admin/notifications'
+      preLoaderRoute: typeof SuperAdminNotificationsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/forms': {
+      id: '/super-admin/forms'
+      path: '/forms'
+      fullPath: '/super-admin/forms'
+      preLoaderRoute: typeof SuperAdminFormsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/dashboard': {
+      id: '/super-admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/super-admin/dashboard'
+      preLoaderRoute: typeof SuperAdminDashboardRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/activity': {
+      id: '/super-admin/activity'
+      path: '/activity'
+      fullPath: '/super-admin/activity'
+      preLoaderRoute: typeof SuperAdminActivityRouteImport
+      parentRoute: typeof SuperAdminRoute
     }
     '/records/settings': {
       id: '/records/settings'
@@ -895,12 +1105,43 @@ const RecordsRouteChildren: RecordsRouteChildren = {
 const RecordsRouteWithChildren =
   RecordsRoute._addFileChildren(RecordsRouteChildren)
 
+interface SuperAdminRouteChildren {
+  SuperAdminActivityRoute: typeof SuperAdminActivityRoute
+  SuperAdminDashboardRoute: typeof SuperAdminDashboardRoute
+  SuperAdminFormsRoute: typeof SuperAdminFormsRoute
+  SuperAdminNotificationsRoute: typeof SuperAdminNotificationsRoute
+  SuperAdminPermissionsRoute: typeof SuperAdminPermissionsRoute
+  SuperAdminProfileRoute: typeof SuperAdminProfileRoute
+  SuperAdminReportsRoute: typeof SuperAdminReportsRoute
+  SuperAdminRolesRoute: typeof SuperAdminRolesRoute
+  SuperAdminSettingsRoute: typeof SuperAdminSettingsRoute
+  SuperAdminUsersRoute: typeof SuperAdminUsersRoute
+}
+
+const SuperAdminRouteChildren: SuperAdminRouteChildren = {
+  SuperAdminActivityRoute: SuperAdminActivityRoute,
+  SuperAdminDashboardRoute: SuperAdminDashboardRoute,
+  SuperAdminFormsRoute: SuperAdminFormsRoute,
+  SuperAdminNotificationsRoute: SuperAdminNotificationsRoute,
+  SuperAdminPermissionsRoute: SuperAdminPermissionsRoute,
+  SuperAdminProfileRoute: SuperAdminProfileRoute,
+  SuperAdminReportsRoute: SuperAdminReportsRoute,
+  SuperAdminRolesRoute: SuperAdminRolesRoute,
+  SuperAdminSettingsRoute: SuperAdminSettingsRoute,
+  SuperAdminUsersRoute: SuperAdminUsersRoute,
+}
+
+const SuperAdminRouteWithChildren = SuperAdminRoute._addFileChildren(
+  SuperAdminRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
   LoginRoute: LoginRoute,
   RecordsRoute: RecordsRouteWithChildren,
+  SuperAdminRoute: SuperAdminRouteWithChildren,
   UserRoute: UserRoute,
 }
 export const routeTree = rootRouteImport

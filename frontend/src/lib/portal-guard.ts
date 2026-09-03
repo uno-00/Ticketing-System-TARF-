@@ -13,12 +13,12 @@ export async function ensurePortalRole(allowed: (role: string) => boolean, slot:
     if (!allowed(user.role)) {
       throw redirect({ to: dashboardForRole(user.role), replace: true });
     }
-    setSession(slot, { token: saved.token, user });
+    setSession(slot, { token: saved.token, user }, { notify: false });
     return user;
   } catch (err) {
     if (err && typeof err === "object" && "to" in err) throw err;
     if (err instanceof ApiError && err.status === 401) {
-      setSession(slot, null);
+      setSession(slot, null, { notify: false });
       throw redirect({ to: LOGIN, replace: true });
     }
     return;

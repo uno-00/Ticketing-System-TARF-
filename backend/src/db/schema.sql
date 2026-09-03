@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(255) NOT NULL,
   division VARCHAR(255) NOT NULL DEFAULT 'ICT',
   designation VARCHAR(255) NOT NULL DEFAULT '',
-  role ENUM('admin', 'record_management', 'user') NOT NULL DEFAULT 'user',
+  role ENUM('super_admin', 'admin', 'record_management', 'user') NOT NULL DEFAULT 'user',
   active TINYINT(1) NOT NULL DEFAULT 1,
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),

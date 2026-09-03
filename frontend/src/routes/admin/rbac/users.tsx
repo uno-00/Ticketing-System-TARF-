@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { ADMIN_DASHBOARD } from "@/lib/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -44,10 +45,13 @@ import { useAdminSession } from "@/lib/use-portal-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/rbac/users")({
+  beforeLoad: () => {
+    throw redirect({ to: ADMIN_DASHBOARD, replace: true });
+  },
   component: RbacUsersPage,
 });
 
-function RbacUsersPage() {
+export function RbacUsersPage() {
   const qc = useQueryClient();
   const { canQuery } = useAdminSession();
   const [searchInput, setSearchInput] = useState("");

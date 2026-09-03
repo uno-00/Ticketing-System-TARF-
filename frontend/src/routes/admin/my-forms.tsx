@@ -241,7 +241,7 @@ function MonthlyTrend({ data }: { data: MyFormsAnalytics["monthlyTrend"] }) {
   );
 }
 
-function MyFormsPage() {
+export function MyFormsPage() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my-forms-analytics"],

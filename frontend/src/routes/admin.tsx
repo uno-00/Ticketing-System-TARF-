@@ -7,14 +7,11 @@ import {
   FilePenLine,
   FileStack,
   Inbox,
-  KeyRound,
   LayoutDashboard,
   MessageCircle,
   Send,
-  Shield,
   Ticket,
   UserCheck,
-  Users,
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { useMessageNotifications } from "@/hooks/use-message-notifications";
@@ -33,9 +30,6 @@ import {
   ADMIN_MY_FORMS,
   ADMIN_MY_REQUESTS,
   ADMIN_MY_REQUESTS_SUBMIT,
-  ADMIN_RBAC_PERMISSIONS,
-  ADMIN_RBAC_ROLES,
-  ADMIN_RBAC_USERS,
   ADMIN_REPORTS,
   ADMIN_REQUESTS,
   isAdminRole,
@@ -108,14 +102,6 @@ function AdminLayout() {
             { to: ADMIN_ASSIGNED, label: "My Assignments", icon: UserCheck },
             { to: ADMIN_MY_REQUESTS, label: "My Requests", icon: Inbox },
             { to: ADMIN_MY_REQUESTS_SUBMIT, label: "Submit TA Request", icon: Send },
-          ],
-        },
-        {
-          title: "RBAC",
-          items: [
-            { to: ADMIN_RBAC_USERS, label: "Users", icon: Users },
-            { to: ADMIN_RBAC_ROLES, label: "Roles", icon: Shield },
-            { to: ADMIN_RBAC_PERMISSIONS, label: "Permissions", icon: KeyRound },
           ],
         },
       ]}

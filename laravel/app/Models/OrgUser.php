@@ -64,7 +64,7 @@ class OrgUser extends Model
     /**
      * Map Spatie role names on this org user to Support Ticketing System portal roles.
      *
-     * @return 'admin'|'record_management'|'user'
+     * @return 'super_admin'|'admin'|'record_management'|'user'
      */
     public function ticketingRole(): string
     {
@@ -79,7 +79,10 @@ class OrgUser extends Model
             ->pluck('r.name')
             ->map(fn ($n) => strtolower((string) $n));
 
-        if ($names->contains('super_admin') || $names->contains('admin')) {
+        if ($names->contains('super_admin')) {
+            return 'super_admin';
+        }
+        if ($names->contains('admin')) {
             return 'admin';
         }
         if ($names->contains('record_management') || $names->contains('records')) {

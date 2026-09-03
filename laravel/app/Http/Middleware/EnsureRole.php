@@ -18,6 +18,11 @@ class EnsureRole
             throw new ApiException(401, 'Authentication required');
         }
 
+        // Super Admin may use Admin, Records, and Staff (client) APIs.
+        if ($user->role === 'super_admin') {
+            return $next($request);
+        }
+
         if ($roles !== [] && ! in_array($user->role, $roles, true)) {
             throw new ApiException(403, 'Insufficient permissions');
         }

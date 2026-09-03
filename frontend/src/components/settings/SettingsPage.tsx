@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { getSession, setSession } from "@/lib/sessions";
 
 function roleLabel(role: string | undefined) {
+  if (role === "super_admin") return "Super Admin";
   if (role === "admin") return "Admin";
   if (role === "record_management") return "Records";
   if (role === "user") return "Staff";

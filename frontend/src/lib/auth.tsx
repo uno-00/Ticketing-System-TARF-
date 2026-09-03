@@ -15,6 +15,7 @@ import {
   AUTH_CHANGED_EVENT,
   getSession,
   listSessions,
+  notifySessionChanged,
   pathToSlot,
   roleToSlot,
   SESSIONS_STORAGE_KEY,
@@ -93,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .me(slot)
         .then(({ user: u }) => {
           if (cancelled || gen !== syncGen) return;
-          setSession(slot, { token: saved.token, user: u });
+          // Silent write — notifying would re-enter sync and spam /auth/me.
+          setSession(slot, { token: saved.token, user: u }, { notify: false });
           setSessions(readSessionsMap());
           setUser(u);
           setSessionReady(true);
@@ -101,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .catch((err) => {
           if (cancelled || gen !== syncGen) return;
           if (err instanceof ApiError && err.status === 401) {
-            setSession(slot, null);
+            setSession(slot, null, { notify: false });
             setSessions(readSessionsMap());
             setUser(null);
           } else {
@@ -140,16 +142,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { token, user: u } = await api.login(loginId, password);
       const slot = roleToSlot(u.role);
-      setSession(slot, { token, user: u });
-      // Also unlock client portal so PAMANA employees (often admin/staff) can submit TA forms.
-      if (slot !== "client") {
-        setSession("client", { token, user: u });
+      const payload = { token, user: u };
+
+      // Write slots silently, then notify once to avoid N sync storms.
+      setSession(slot, payload, { notify: false });
+      if (u.role === "super_admin") {
+        setSession("admin", payload, { notify: false });
+        setSession("records", payload, { notify: false });
+        setSession("client", payload, { notify: false });
+      } else if (slot !== "client") {
+        // Also unlock client portal so PAMANA employees can submit TA forms.
+        setSession("client", payload, { notify: false });
       }
+      notifySessionChanged(slot);
 
       setSessions(readSessionsMap());
 
       const currentSlot = pathToSlot(window.location.pathname);
-      if (currentSlot === slot || currentSlot === "client") {
+      if (
+        currentSlot === slot ||
+        currentSlot === "client" ||
+        (u.role === "super_admin" &&
+          (currentSlot === "admin" || currentSlot === "records" || currentSlot === "client"))
+      ) {
         setUser(u);
         setSessionReady(true);
         setIsAuthLoading(false);
