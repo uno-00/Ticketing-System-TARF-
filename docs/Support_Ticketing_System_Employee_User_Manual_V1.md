@@ -4,55 +4,24 @@
 
 ## Employee User Manual
 
-**Version 1.0**  
+**Version 2.0 (Detailed Edition)**  
 **September 2026**
 
 ---
 
 ## Table of Contents
 
-1. Introduction  
-   1.1 Overview  
-   1.2 Objectives  
-   1.3 User’s Role, Access and Permission  
-2. General Information  
-   2.1 Objectives  
-   2.2 System Features  
-   2.3 System Users and Their Descriptions  
-3. Getting Started  
-   3.1 Log-in / Sign In  
-   3.2 Dashboard  
-   3.3 System Navigation  
-4. Super Admin Portal  
-   4.1 Dashboard  
-   4.2 Portal Access / Switch Portal  
-   4.3 Users, Roles, and Permissions (RBAC)  
-   4.4 System Management  
-5. Admin Portal  
-   5.1 Form Builder  
-   5.2 My Forms  
-   5.3 Approvals  
-   5.4 Request Management  
-   5.5 My Assignments  
-   5.6 My Requests / Submit TA Request  
-   5.7 Reports  
-6. Records Portal  
-   6.1 Pending Forms  
-   6.2 Published Forms  
-   6.3 Activity Logs  
-7. Client Portal (Staff)  
-   7.1 Submit Request  
-   7.2 My Requests  
-   7.3 Service Feedback  
-8. Shared Features  
-   8.1 Messages  
-   8.2 Notifications  
-   8.3 Settings  
-9. Status Reference  
-   9.1 Form Statuses  
-   9.2 Ticket Statuses  
-   9.3 End-to-End Workflow Summary  
-10. Frequently Asked Questions  
+1. Introduction
+2. General Information
+3. Getting Started
+4. Super Admin Portal
+5. Admin Portal
+6. Records Portal
+7. Client Portal (Staff)
+8. Shared Features (Messages, Notifications, Settings)
+9. Status Reference and End-to-End Flows
+10. Frequently Asked Questions
+11. List of Figures
 
 ---
 
@@ -60,81 +29,81 @@
 
 ### 1.1 Overview
 
-The **Support Ticketing System** is a centralized platform designed to streamline the creation, review, submission, approval, assignment, and completion of **technical assistance (TA) requests** within the National Museum of the Philippines (NMP). It provides Super Admin, Admin, Records, and Staff users with the tools needed to build and publish TA forms, review form templates, submit TA requests with requestor details auto-filled from **PAMANA** (HR employee records), approve and assign work to authorized personnel, and track service completion, feedback, and closure.
+The **Support Ticketing System** is a centralized platform of the National Museum of the Philippines (NMP) designed to streamline the **creation, review, publication, submission, approval, assignment, completion, feedback, and closure** of technical assistance (TA) requests.
 
-This manual serves as a guide for authorized employees in using the Support Ticketing System. It covers logging in and navigating each portal (**Super Admin**, **Admin**, **Records**, and **Client / Staff**), managing forms and requests, messaging, notifications, and account settings.
+It provides four portals:
 
-The Support Ticketing System aims to improve efficiency, accountability, and transparency in technical assistance handling by reducing manual paperwork, ensuring requestor details are accurate through PAMANA integration, and providing a clear audit trail for every request processed within the system. This manual is intended for authorized NMP personnel responsible for operating or using the platform according to their assigned role.
+- **Super Admin** — system overview, portal switching, Users / Roles / Permissions (RBAC), activity logs
+- **Admin** — Form Builder, My Forms, Approvals, Request Management, My Assignments, My Requests, Reports, Messages
+- **Records (Record Admin)** — Pending Forms, Published Forms, Activity Logs
+- **Client (Staff)** — Submit Request, My Requests, Service Feedback, Messages
 
-**Important branding note:** **PAMANA** is used only to identify and auto-fill the requestor’s employee profile (division/section, name, email, designation). The product name of this application is **Support Ticketing System**.
+Requestor profile fields (Division/Section, First Name, Middle Name, Last Name, Email Address, Designation) are auto-filled from **PAMANA** employee records when the signed-in museum username is linked. **PAMANA is not the product name** of this application; it is the HR source used for autofill only.
+
+This manual is written in the same style as the NMP Document Tracking System (DTS) Employee Manual: numbered steps, field-level instructions, notes, and a figure for each major screen.
 
 ### 1.2 Objectives
 
-The Support Ticketing System of the National Museum of the Philippines (NMP) aims to provide a centralized and efficient platform for monitoring, managing, and tracking technical assistance requests within the organization. The system will improve request visibility, accountability, processing efficiency, and timely action by authorized personnel and offices.
+The Support Ticketing System aims to:
 
-The Support Ticketing System aims to make the creation, review, submission, approval, assignment, and closure of technical assistance requests easier and more organized. It helps users quickly check the status of TA forms and tickets, reduce delays, and keep a clear record of transactions. The system also provides dashboards, notifications, messaging, and reports to help offices monitor pending and completed requests.
+- Centralize TA form design and publishing
+- Standardize staff request submission with accurate requestor details
+- Improve accountability through approve → assign → complete → feedback → close
+- Provide dashboards, notifications, messaging, and audit logs
+- Restrict sensitive administration (RBAC) to Super Admin
 
 ### 1.3 User’s Role, Access and Permission
 
-**1.3.1 Super Admin** has the highest level of system access. Super Admin can open every portal (Admin, Records, and Staff/Client) with one account, manage Users / Roles / Permissions (RBAC), view system-wide dashboards and activity logs, and switch portals from the sidebar.
+**1.3.1 Super Admin.** Highest access. Opens Admin, Records, and Staff/Client with one login. Manages Users, Roles, Permissions. Views system dashboard, reports, form management, activity logs, and system notifications. Uses **SWITCH PORTAL** when inside other portals.
 
-**1.3.2 Admin** is responsible for Form Builder and My Forms, approving client TA requests, assigning personnel (from the form owner’s division), monitoring Request Management and My Assignments, submitting personal TA requests when needed, and viewing Reports. Admin covers Section Head (ODG Section and Regional Component Museum) and Division Head (All except ODG).
+**1.3.2 Admin.** Section Head (ODG Section and Regional Component Museum) and Division Head (All except ODG). Builds and submits forms to Records; approves/rejects client tickets; assigns personnel from the **form owner’s division**; tracks My Assignments; may submit personal TA requests; uses Reports and Messages. **Does not** manage RBAC in the Admin sidebar.
 
-**1.3.3 Record Admin** is responsible for reviewing forms pending publication, approving and publishing forms for client use, or disapproving forms with remarks, and monitoring Activity Logs.
+**1.3.3 Record Admin.** Reviews forms Pending Review; **Approve & publish** or **Disapprove** with remarks; monitors Published Forms and Activity Logs. Messaging is not available in Records.
 
-**1.3.4 Staff** is responsible for submitting technical assistance requests, tracking My Requests, marking service complete, submitting feedback, closing or reopening requests, and using Messages.
+**1.3.4 Staff (Client).** Submits TA requests, tracks My Requests, marks service complete, submits Client Satisfaction Survey feedback, closes or reopens requests, and uses Messages.
 
 ---
 
 ## 2. General Information
 
-The Support Ticketing System of the National Museum of the Philippines (NMP) aims to provide a centralized and efficient platform for monitoring, managing, and tracking technical assistance requests within the organization. The system will improve request visibility, accountability, processing efficiency, and timely action by authorized personnel and offices.
-
 ### 2.1 Objectives
 
-The Support Ticketing System of the National Museum of the Philippines (NMP) aims to make the creation, review, submission, approval, assignment, and closure of technical assistance requests easier and more organized. It helps users quickly check the status and progress of TA forms and tickets, reduce delays, and keep a clear record of transactions. The system also provides reports and updates to help offices monitor pending and completed requests.
+The system makes receiving, reviewing, assigning, monitoring, and closing TA work easier and more organized. Users can check form and ticket status quickly, reduce delays, and keep a clear transaction history.
 
 ### 2.2 System Features
 
-**2.2.1 Form Builder.** The system allows authorized Admin users to create TA forms with fields, a print template, field placements, and a procedure section, then submit the form to Records for review.
+**2.2.1 Form Builder.** Guided wizard: General → Fields → Print Template → Procedure. Submit to Records or save as draft.
 
-**2.2.2 Form Review and Publishing.** The system allows Record Admin users to review pending forms, **Approve & publish** them for client use, or **Disapprove** them with remarks for return to Admin.
+**2.2.2 Form Review and Publishing.** Records selects Approve & publish or Disapprove with remarks.
 
-**2.2.3 Request Submission.** The system allows Staff (Client Portal) and Admin users (Submit TA Request) to submit technical assistance requests using published forms.
+**2.2.3 Request Submission.** Staff and Admin (Submit TA Request) use published forms. PAMANA autofills requestor fields.
 
-**2.2.4 PAMANA Requestor Autofill.** The system fills Division/Section, First Name, Middle Name, Last Name, Email Address, and Designation from PAMANA employee records linked to the signed-in museum username.
+**2.2.4 Request Approval.** Admin Approvals: Approve sets status to **Open**; Reject requires a reason.
 
-**2.2.5 Request Approval.** The system allows Admin users to approve or reject pending client requests. **When a request is approved, its status becomes Open** (not “Approved”). Assignment is performed next from Request Management.
+**2.2.5 Personnel Assignment.** On Request Management ticket detail, Admin assigns active Admins from the **same division as the form creator**. Assign sets status to **In Progress**.
 
-**2.2.6 Personnel Assignment.** The system allows Admin users to assign Open tickets to active Admin users who belong to the **same division as the form creator** (for example, an ICT form is assignable only to ICT Admins). Assigned staff can track work under My Assignments.
+**2.2.6 Ticket Status Tracking.** pending approval, open, in progress, pending, resolved, closed, rejected, reopened.
 
-**2.2.7 Ticket Status Tracking.** The system allows users to monitor the current status of each ticket, such as pending approval, open, in progress, pending, resolved, closed, rejected, or reopened.
+**2.2.7 Service Completion and Feedback.** Requestor marks service complete, completes survey confirmation, then Close ticket or Reopen request.
 
-**2.2.8 Service Completion and Feedback.** The system allows the requestor to mark service complete, submit client satisfaction feedback, then close or reopen the request.
+**2.2.8 Messaging.** Admin and Client portals: chats, New message, Poke, Request messages on tickets.
 
-**2.2.9 Document Upload and Form Preview.** The system allows users to view the form template and how answers, including PAMANA fields, appear on the printable form.
+**2.2.9 Notifications.** Bell alerts for pending approvals, pending forms, messages/pokes, and actionable client updates.
 
-**2.2.10 Notifications and Alerts.** The system notifies users of pending approvals, pending form reviews, and actionable request updates.
+**2.2.10 Role-Based Access Control.** Users / Roles / Permissions managed only in Super Admin.
 
-**2.2.11 Role-Based Access Control.** The system restricts access to functions according to the user’s assigned role. **Users, Roles, and Permissions are managed in the Super Admin portal** (not in the Admin sidebar).
+**2.2.11 Dashboards and Reports.** Role-specific overview cards and Reports & Analytics.
 
-**2.2.12 Messaging.** The system supports chats, ticket-linked threads, pokes, and mentions for Admin and Client portals.
-
-**2.2.13 Dashboard.** The system provides a centralized dashboard showing key counts and activities for each portal.
-
-**2.2.14 Reports and Analytics.** The system generates reports on request volume, completion, and client feedback.
-
-**2.2.15 Super Admin Console.** The system provides Super Admin with system overview statistics, portal switching, activity logs, and RBAC management.
+**2.2.12 Audit / Activity Logs.** Records activity and Super Admin system-wide logs.
 
 ### 2.3 System Users and Their Descriptions
 
-**2.3.1 Super Admin.** Has the highest level of system access and is responsible for overall system administration, including managing user roles, permissions, portal access, and system-wide monitoring.
-
-**2.3.2 Admin.** Section Head (ODG Section and Regional Component Museum); Division Head (All except ODG). Manages forms, approvals, assignments, requests, and reports.
-
-**2.3.3 Record Admin.** Responsible for managing and monitoring form review and publishing, including pending forms, published forms, and activity logs.
-
-**2.3.4 Staff.** Employee / client requester responsible for submitting and tracking their own technical assistance requests.
+| Role | Portal landing | Main responsibilities |
+|------|----------------|----------------------|
+| Super Admin | /super-admin/dashboard | System admin, RBAC, portal switch |
+| Admin | /admin/dashboard | Forms, approvals, assignment, reports |
+| Record Management | /records/dashboard | Form review and publishing |
+| Staff (user) | /client/dashboard | Submit and close own TA requests |
 
 ---
 
@@ -142,78 +111,120 @@ The Support Ticketing System of the National Museum of the Philippines (NMP) aim
 
 ### 3.1 Log-in / Sign In
 
-**3.1.1** To start using the web application, you should log in first. Open any web browser and type the Support Ticketing System address in the address bar (for example, `http://on-prem.x-dcb.net:5173/login` or `http://127.0.0.1:5173/login`). The Support Ticketing System log-in page will be displayed (Figure 1).
+**3.1.1** Open a web browser and enter the system address (example: `http://on-prem.x-dcb.net:5173/login` or `http://127.0.0.1:5173/login`). The log-in page appears.
 
-**3.1.2** To log in, enter a valid **Username** (museum organization username) and **Password**, then click the **Sign In** button.
+*[Screenshot placeholder]*
+**Figure 1 – Support Ticketing System log-in page (Welcome Back)**
 
-**3.1.3** Optionally tick **Remember me** to save your username on this browser for the next visit.
+**3.1.2** The page title shows **Welcome Back**. The subtitle reads: *Support Ticketing System — please log in to continue.*
 
-**3.1.4** If you forgot your password, use **Forgot password?** and contact your system administrator to reset your password. Password reset is not self-service in this version.
+**3.1.3** Enter **Username** (museum organization username) in the field with placeholder *Enter your username*.
 
-**Note:** Sign in with your museum organization username so PAMANA can match your employee record for requestor autofill.
+**3.1.4** Enter **Password** in the field with placeholder *Enter your password*. Use the eye icon to show or hide the password.
 
-*[Screenshot placeholder]*  
-**Figure 1 – Support Ticketing System log-in page**
+**3.1.5** Optionally tick **Remember me** to save the username on this browser.
 
-### 3.2 Dashboard
+**3.1.6** Click **Sign In**. While processing, the button shows **Signing in…**.
 
-Upon login, the user will be directed to the Dashboard that matches their role:
+**3.1.7** If credentials are wrong, the page shows: *Incorrect email or password.*
+
+**3.1.8** If the API is down, a red alert shows: *API server is not running* with instruction to run `bun run start`.
+
+**3.1.9** **Forgot password?** displays: *Contact your system administrator to reset your password.*
+
+**Note:** Sign in with your museum username so PAMANA can match your employee record for requestor autofill.
+
+**3.1.10** After successful login, you are redirected by role:
 
 | Role | Landing page |
 |------|----------------|
-| Super Admin | `/super-admin/dashboard` |
-| Admin | `/admin/dashboard` |
-| Record Management | `/records/dashboard` |
-| Staff | `/client/dashboard` |
+| Super Admin | /super-admin/dashboard |
+| Admin | /admin/dashboard |
+| Record Management | /records/dashboard |
+| Staff | /client/dashboard |
 
-The Dashboard serves as the main landing page of the Support Ticketing System. It provides users with an overview of forms and request activities, statuses, and quick access to frequently used functions.
+### 3.2 Interface Elements (All Portals)
 
-*[Screenshot placeholder]*  
-**Figure 2 – Support Ticketing System Dashboard**
+**3.2.1 Sidebar brand.** Top of sidebar: **National Museum of the Philippines** / **Support Ticketing System**.
 
-**3.2.1 Super Admin Dashboard.** Displays system-wide statistics (users, forms, tickets), portal access shortcuts, and recent activities.
+**3.2.2 Navigation sections.** Grouped menus (MAIN, FORMS, REQUESTS, etc.) with icons and optional badges.
 
-**3.2.2 Admin Dashboard.** Displays a personalized greeting, a snapshot of TA forms, and pending client requests awaiting approval.
+**3.2.3 Sidebar footer.** **Settings** and **Logout**.
 
-**3.2.3 Records Dashboard.** Displays welcome information and counts for pending forms and published forms.
+**3.2.4 Header.** Current page title; notification bell; profile / Sign out.
 
-**3.2.4 Client Dashboard.** Displays Welcome back and an overview of Your requests.
+*[Screenshot placeholder]*
+**Figure 2 – Common portal chrome — sidebar brand, navigation, Settings, Logout, notification bell**
 
-### 3.3 System Navigation
+### 3.3 Dashboards Overview
 
-The left-side menu provides access to the main features of the system. The sidebar brand shows **National Museum of the Philippines / Support Ticketing System**. The bottom of the sidebar provides **Settings** and **Logout**. The header includes the notification bell and the current page title.
+Upon login, each role lands on its Dashboard.
 
-**3.3.1 Super Admin Navigation**
+**3.3.1 Super Admin Dashboard.** System-wide counts, portal access cards, recent activities.
 
-- **MAIN:** Dashboard, Reports & Analytics  
-- **PORTALS / ACCESS:** Admin Portal, Records Portal, Staff/Client Portal  
-- **USER & ACCESS MANAGEMENT:** Users, Roles, Permissions  
-- **SYSTEM MANAGEMENT:** System Settings, Form Management, Activity Logs / Audit Logs, System Notifications  
-- **ACCOUNT:** My Profile, Settings  
+*[Screenshot placeholder]*
+**Figure 3 – Super Admin Dashboard**
 
-**3.3.2 Admin Navigation**
+**3.3.2 Admin Dashboard.** Greeting (*Good day, {FirstName}*), form and approval alerts, pending client requests list.
 
-- **MAIN:** Dashboard, Reports, Messages  
-- **FORMS:** Form Builder, My Forms  
-- **REQUESTS:** Approvals, Request Management, My Assignments, My Requests, Submit TA Request  
+*[Screenshot placeholder]*
+**Figure 4 – Admin Dashboard**
 
-*(RBAC is not listed under Admin. Use Super Admin for Users / Roles / Permissions.)*
+**3.3.3 Records Dashboard.** Welcome message; Pending review and Published forms counts; pending list.
 
-**3.3.3 Records Navigation**
+*[Screenshot placeholder]*
+**Figure 5 – Records Dashboard**
 
-- **MAIN:** Dashboard  
-- **FORMS:** Pending Forms, Published Forms  
-- **SYSTEM:** Activity Logs  
+**3.3.4 Client Dashboard.** *Welcome back*; Active / Pending approval / Completed stats; Recent requests.
 
-**3.3.4 Client Navigation**
+*[Screenshot placeholder]*
+**Figure 6 – Client Dashboard**
 
-- **MAIN:** Dashboard, Messages  
-- **REQUESTS:** Submit Request, My Requests, Service Feedback  
+### 3.4 System Navigation by Portal
 
-**3.3.5 Switch Portal (Super Admin only).** When a Super Admin opens Admin, Records, or Client, a **SWITCH PORTAL** block appears in the sidebar so the user can return to Super Admin or jump to another portal without signing out.
+**3.4.1 Super Admin Navigation**
 
-*[Screenshot placeholder]*  
-**Figure 3 – System Navigation**
+- MAIN: Dashboard; Reports & Analytics
+- PORTALS / ACCESS: Admin Portal; Records Portal; Staff/Client Portal
+- USER & ACCESS MANAGEMENT: Users; Roles; Permissions
+- SYSTEM MANAGEMENT: System Settings; Form Management; Activity Logs / Audit Logs; System Notifications
+- ACCOUNT: My Profile; Settings
+
+*[Screenshot placeholder]*
+**Figure 7 – Super Admin sidebar navigation**
+
+**3.4.2 Admin Navigation**
+
+- MAIN: Dashboard; Reports; Messages
+- FORMS: Form Builder; My Forms
+- REQUESTS: Approvals (badge); Request Management; My Assignments; My Requests; Submit TA Request
+
+*(No RBAC section under Admin.)*
+
+*[Screenshot placeholder]*
+**Figure 8 – Admin sidebar navigation**
+
+**3.4.3 Records Navigation**
+
+- MAIN: Dashboard
+- FORMS: Pending Forms (badge); Published Forms
+- SYSTEM: Activity Logs
+
+*[Screenshot placeholder]*
+**Figure 9 – Records sidebar navigation**
+
+**3.4.4 Client Navigation**
+
+- MAIN: Dashboard; Messages
+- REQUESTS: Submit Request; My Requests (badge); Service Feedback (badge)
+
+*[Screenshot placeholder]*
+**Figure 10 – Client sidebar navigation**
+
+**3.4.5 Switch Portal (Super Admin only).** When Super Admin opens Admin, Records, or Client, a **SWITCH PORTAL** block appears with: Super Admin | Admin | Records | Staff. Use it to jump without signing out. Logout as Super Admin clears all three portal sessions.
+
+*[Screenshot placeholder]*
+**Figure 11 – SWITCH PORTAL block while Super Admin is inside another portal**
 
 ---
 
@@ -221,255 +232,396 @@ The left-side menu provides access to the main features of the system. The sideb
 
 ### 4.1 Dashboard
 
-The Super Admin Dashboard shows overall status of the Support Ticketing System — users, forms, requests, and recent activity.
+**4.1.1** Open **Dashboard** under MAIN (or land here after login).
 
-**4.1.1** After signing in as Super Admin, open **Dashboard** under MAIN (or land here automatically).
+**4.1.2** Page title: **Dashboard**. Description: *Overall status of the Support Ticketing System — users, forms, requests, and recent activity.*
 
-**4.1.2** Review summary cards such as Total Users, Total Admins, Records Personnel, Staff, Pending Forms, Published Forms, Pending Requests, In Progress, Completed, Closed, and Reopened.
+**4.1.3** Review statistic cards:
 
-**4.1.3** Use **Portal access** cards to open Admin, Records, or Staff/Client.
+- Total Users; Total Admins; Records Personnel; Staff
+- Pending Forms; Published Forms; Pending Requests; In Progress
+- Completed (Resolved); Closed Tickets; Reopened; Completed + Closed
 
-**4.1.4** Review **Recent activities**. Each row shows the action summary, actor name, relative and absolute time, and a Form / Ticket type indicator. Click **View all logs** to open Activity Logs / Audit Logs.
+**4.1.4** Under **Portal access**, click Admin Portal, Records Portal, or Staff / Client Portal.
 
-*[Screenshot placeholder]*  
-**Figure 4 – Super Admin Dashboard**
+*[Screenshot placeholder]*
+**Figure 12 – Super Admin Dashboard — stats and portal access**
 
-### 4.2 Portal Access / Switch Portal
+**4.1.5** Under **Recent activities**, review action summary, actor, time, and Form/Ticket type. Click **View all logs** for the full audit list.
 
-**4.2.1** From Super Admin, click **Admin Portal**, **Records Portal**, or **Staff/Client Portal** under PORTALS / ACCESS.
+*[Screenshot placeholder]*
+**Figure 13 – Super Admin Recent activities feed**
 
-**4.2.2** While inside another portal, use **SWITCH PORTAL** in the sidebar to return to Super Admin or open a different portal.
+**4.1.6** If loading fails: *Could not load overview*. If empty: *No recent activity*.
 
-**4.2.3** Logging out as Super Admin clears sessions for all three portal slots (Admin, Records, Client).
+### 4.2 Reports & Analytics
 
-### 4.3 Users, Roles, and Permissions (RBAC)
+**4.2.1** Open **Reports & Analytics**.
 
-RBAC is available **only** in the Super Admin portal.
+**4.2.2** Review Total requests, Pending approval, Closed, With feedback.
 
-**4.3.1 Users**
+**4.2.3** Feedback table columns: Ticket | Client | Comment | Action (**View request**). Empty: *No feedback yet.*
 
-1. Open **Users** under USER & ACCESS MANAGEMENT.  
-2. Use Search to find employees by name or username.  
-3. Filter by role or access status if needed.  
-4. Use **Prev / Next** pagination to move through employee pages.  
-5. Click **Assign roles** or **Manage roles** for an employee.  
-6. Select the appropriate role(s) and save. System roles include Super Admin, Admin, Record Management, and Staff.
+*[Screenshot placeholder]*
+**Figure 14 – Super Admin Reports & Analytics**
 
-**4.3.2 Roles**
+### 4.3 Users (RBAC)
 
-1. Open **Roles**.  
-2. Review system roles and custom roles.  
-3. Create a role if needed (name and optional description).  
-4. Manage permissions for a role by selecting capabilities from the catalog.  
-5. System / protected roles cannot be deleted.
+**4.3.1** Open **Users** under USER & ACCESS MANAGEMENT.
 
-**4.3.3 Permissions**
+**4.3.2** Breadcrumb: Home / RBAC / Users. Tabs: **Users | Roles | Permissions**.
 
-1. Open **Permissions**.  
-2. Browse the capability catalog grouped by category.  
-3. Use search to find a specific permission.  
-4. Assign permissions to roles from the Roles page (not by editing permissions in isolation).
+**4.3.3** Title: **Users**. Description: *Assign roles to active employees and review access at a glance.*
 
-*[Screenshot placeholder]*  
-**Figure 5 – Super Admin Users / Roles / Permissions**
+**4.3.4** Summary cards: Active employees; With roles; Needs role assignment.
 
-### 4.4 System Management
+**4.3.5** In **Employee access**, use Search (*Search name, username, email, ID…*).
 
-**4.4.1 System Settings / My Profile.** Update account display information and password as allowed.
+**4.3.6** Filter by role and access: All access | With roles | Needs assignment.
 
-**4.4.2 Form Management.** Opens form-related administration views used by Super Admin for oversight (same form domain as Admin My Forms / Records).
+**4.3.7** Table columns: Employee | Account | Assigned roles | Action.
 
-**4.4.3 Activity Logs / Audit Logs.** Displays the system-wide audit trail of significant actions across portals (actor, action, summary, timestamp).
+**4.3.8** Click **Assign** or **Manage**. Dialog title: **Assign roles** / **Manage roles**. Select role checkboxes, then **Save roles** (or **Cancel**).
 
-**4.4.4 System Notifications.** Shows overview-driven alerts and recent system events for Super Admin monitoring.
+**4.3.9** Use **Prev** / **Next** for pagination. Empty: *No employees found.* Empty roles cell: *No roles assigned.*
+
+*[Screenshot placeholder]*
+**Figure 15 – Super Admin Users list**
+
+*[Screenshot placeholder]*
+**Figure 16 – Assign / Manage roles dialog**
+
+### 4.4 Roles (RBAC)
+
+**4.4.1** Open **Roles**. Title: **Roles**. Description: *Manage system roles and the permissions granted to each role.*
+
+**4.4.2** Click **New role**. Enter Name (*e.g. form_reviewer*) and optional Description. Click **Create** or **Cancel**.
+
+**4.4.3** Table columns: Role | Permissions | Users | Action. Protected roles show **System role** and cannot be deleted (super_admin, admin, record_management, user).
+
+**4.4.4** Click **Manage** to edit description and permissions (filter *Filter permissions…*), then **Save**.
+
+**4.4.5** Delete custom roles with Trash and confirm *Delete role "…"?*
+
+*[Screenshot placeholder]*
+**Figure 17 – Super Admin Roles list**
+
+*[Screenshot placeholder]*
+**Figure 18 – Create role dialog**
+
+*[Screenshot placeholder]*
+**Figure 19 – Manage role permissions dialog**
+
+### 4.5 Permissions (RBAC)
+
+**4.5.1** Open **Permissions**. Title: **Permissions**. Description explains capabilities are assigned from the Roles page.
+
+**4.5.2** Summary: Total permissions; Ticketing permissions; Categories.
+
+**4.5.3** Search (*Search permissions…*). Tables per category: Permission | Key | Roles using. Empty: *No permissions found* with **Clear search**.
+
+*[Screenshot placeholder]*
+**Figure 20 – Super Admin Permissions catalog**
+
+### 4.6 System Management Pages
+
+**4.6.1 System Settings / My Profile.** Same Settings page as other portals (Account + Password). See Section 8.3.
+
+*[Screenshot placeholder]*
+**Figure 21 – Super Admin Settings / My Profile**
+
+**4.6.2 Form Management.** Opens My Forms Analytics (same content as Admin My Forms) for Super Admin oversight.
+
+*[Screenshot placeholder]*
+**Figure 22 – Super Admin Form Management (My Forms Analytics)**
+
+**4.6.3 Activity Logs / Audit Logs.** Title: **Activity Logs / Audit Logs**. Description: *System-wide audit trail of significant actions across portals.* Empty: *No activity yet.*
+
+*[Screenshot placeholder]*
+**Figure 23 – Super Admin Activity Logs**
+
+**4.6.4 System Notifications.** Title: **System Notifications**. Shortcuts: Pending form reviews → Records Pending Forms; Pending client approvals → Admin Approvals; Audit trail → Activity Logs. Empty: *No alerts.*
+
+*[Screenshot placeholder]*
+**Figure 24 – Super Admin System Notifications**
 
 ---
 
 ## 5. Admin Portal
 
-### 5.1 Form Builder
+### 5.1 Admin Dashboard
 
-The Form Builder page allows Admin users to create a Technical Assistance request form through a guided wizard.
+**5.1.1** Open **Dashboard**. Eyebrow: **Admin**. Title: *Good day, {FirstName}* (or Dashboard).
 
-**5.1.1** Open **Form Builder** from the FORMS section.
+**5.1.2** Description: *Manage TA forms and review incoming client requests.*
 
-**5.1.2** Complete the wizard in order: **General → Fields → Print Template → Procedure**.
+**5.1.3** Quick actions: **Form Builder**; **Approvals (N)**.
 
-**5.1.3** Use **Back** and **Continue** to move between steps.
+**5.1.4** Alerts may appear for forms needing revision (**Open My Forms**) or pending client requests (**Open Approvals**).
 
-**Step 1. General information.** Enter the required form details, including:
+**5.1.5** Stats: Requests to approve; Pending review; Draft forms.
 
-- **Form title.** Enter the official title of the TA form.  
-- **Description.** Provide a brief description of the form’s purpose.  
-- Other general metadata required by the wizard (as shown on screen).
+**5.1.6** Panel **Pending client requests** with **View all** and row action **Review**. Empty: *No pending approvals.*
 
-**Step 2. Fields.** Add and configure form fields that requestors will fill out.
+*[Screenshot placeholder]*
+**Figure 25 – Admin Dashboard with pending client requests**
 
-- Add field types as needed (for example text, choice, or other supported field types shown in the builder).  
-- Mark required fields where appropriate.  
-- Default **Requester profile** fields remain available for the print template: Division/Section, First Name, Middle Name, Last Name, Email Address, and Designation.
+### 5.2 Form Builder (Complete Wizard)
 
-**Step 3. Print Template.** Place form fields on the printable template so submitted answers appear in the correct locations on the official form layout.
+Open **Form Builder** from FORMS. Header shows form title (or *New request form*) and description: *Build fields and print layout, then submit to Records for review.* Meta shows reference number and version.
 
-**Step 4. Procedure.** Upload the work procedure / supporting PDF document that Records and requestors may need during review and service.
+Wizard steps: **1 General → 2 Fields → 3 Print Template → 4 Procedure**. Use **Back** and **Continue**. On the last step: **Submit to Records** and **Save as draft instead**.
 
-**5.1.4** When ready for Records review, click **Submit to Records**.
+*[Screenshot placeholder]*
+**Figure 26 – Form Builder — wizard step indicator**
 
-**5.1.5** To keep working later, click **Save as draft instead**.
+#### Step 1 — General information
 
-*[Screenshot placeholder]*  
-**Figure 6 – Form Builder**
+**5.2.1** Section title: **General information**. Subtitle: *The opening details that identify this form.*
 
-### 5.2 My Forms
+**5.2.2** Complete:
 
-The My Forms page displays forms created by the Admin user, including drafts, pending review, published, and disapproved forms, plus related analytics.
+- **Form title** — placeholder *e.g. Technical Assistance Request*
+- **Reference number** — auto-generated, read-only
+- **Date effectivity** — pick any date
+- **Version number**
 
-**5.2.1** Open **My Forms** to view forms you created and related analytics.
+**5.2.3** Validation before Continue: *Enter a form title before continuing.*; *Choose a date effectivity before continuing.*
 
-**5.2.2** Use **New Form / Create Form** to start a new form.
+*[Screenshot placeholder]*
+**Figure 27 – Form Builder Step 1 — General information**
 
-**5.2.3** For a draft, use **Send to Records** when ready for review.
+#### Step 2 — Fields
 
-**5.2.4** For a disapproved form, review remarks from Records, edit in Form Builder, then **Resubmit**.
+**5.2.4** Left panel **Form elements:** Textbox, Textarea, Dropdown, Checkbox, Radio, Date Picker, File Upload, Email, Number, Signature.
 
-**5.2.5** Published forms become available for Staff (and Admin My Requests) submission.
+**5.2.5** Center **Live preview.** Empty: *Click any element on the left to drop it here.* Drag rows to reorder.
 
-*[Screenshot placeholder]*  
-**Figure 7 – My Forms**
+**5.2.6** Right **Field settings:** Label; Placeholder; Options (comma-separated) with **Use TA service types (6 options)** for checkbox (Information System, Website Update, Event Assistance, Network/Hardware Troubleshooting, Software Troubleshooting, Others); Min/Max length; **Required field**; Variable (read-only).
 
-### 5.3 Approvals
+**5.2.7** Validation: *Add at least one form field before continuing.*
 
-The Approvals page displays client TA requests with status **pending approval**.
+*[Screenshot placeholder]*
+**Figure 28 – Form Builder Step 2 — Fields, live preview, and field settings**
 
-**5.3.1** Open **Approvals** to review pending client requests.
+#### Step 3 — Print Template
 
-**5.3.2** Open a request to review the request details and form file.
+**5.2.8** Substeps: Upload form → Place fields → Save layout.
 
-**5.3.3** Click **Approve / Approve request** to accept the request, or **Reject / Reject request**.
+**5.2.9** Upload image or PDF template (**Choose file** / **Replace**). Limits shown on screen (PNG/JPG/WebP/PDF).
 
-**5.3.4** When rejecting, enter a reason and confirm with **Confirm reject**.
+**5.2.10** Place **Requester profile** variables (Division/Section, First/Middle/Last Name, Email, Designation) and form fields onto the template.
 
-**5.3.5** After approval, the ticket status becomes **Open**. Assignment is **not** completed on the Approvals action alone — proceed to **Request Management** to assign personnel.
+**5.2.11** Use Zoom, Field text size slider, **Reset**, **Clear all**, **Preview**, **Save layout**.
 
-*[Screenshot placeholder]*  
-**Figure 8 – Approvals**
+**5.2.12** Print preview dialog: *Sample data only…* with **Close**, **Copy**, **Print**.
 
-### 5.4 Request Management
+*[Screenshot placeholder]*
+**Figure 29 – Form Builder Step 3 — Print Template placement**
 
-The Request Management page displays client requests and allows Admin users to open ticket details, update status where allowed, assign personnel, and open Request messages.
+*[Screenshot placeholder]*
+**Figure 30 – Print preview dialog**
 
-**5.4.1** Open **Request Management**.
+#### Step 4 — Procedure
 
-**5.4.2** Locate the ticket (for example an **Open** ticket that needs assignment).
+**5.2.13** Section **Work procedure**. Subtitle: *Upload the SOP that accompanies this form (PDF only).*
 
-**5.4.3** Open the ticket detail page.
+**5.2.14** Drop zone: *Drop a PDF or click to browse* (PDF only, max 15 MB). Success: *✓ {filename} ready for Records review.*
 
-**5.4.4** Under **Assign personnel**, choose an assignee from the list. The list shows **active Admin users in the same division as the form creator** (example: ICT form → ICT Admins only).
+**5.2.15** Click **Submit to Records** to send for Records recommendation, or **Save as draft instead**.
 
-**5.4.5** Click **Assign**. After assignment, the ticket typically moves to **in progress** (or remains trackable under My Assignments for the assignee).
+*[Screenshot placeholder]*
+**Figure 31 – Form Builder Step 4 — Work procedure upload and Submit to Records**
 
-**5.4.6** Use **Request messages** when you need a ticket-linked conversation with the people involved in the request.
+### 5.3 My Forms
 
-**5.4.7** Update ticket status when the workflow allows (for example holding as **pending**), following on-screen rules.
+**5.3.1** Open **My Forms**. Title: **My Forms Analytics**. Description: *Overview of form submissions and service requests.*
 
-*[Screenshot placeholder]*  
-**Figure 9 – Request Management / Assign personnel**
+**5.3.2** Click **+ New Form** / **Create Form** to start Form Builder.
 
-### 5.5 My Assignments
+**5.3.3** Review summary cards and charts (Total Requests; Divisions; Most Requested Service; Monthly trends; Top requesting divisions table: # | Division / Section | Requests | %).
 
-The My Assignments page displays requests assigned to the signed-in Admin / ICT personnel for tracking until the client marks the service complete and closes the request.
+**5.3.4** Under **My Forms**, each card shows status badge (Draft | Pending Review | Published | Disapproved).
 
-**5.5.1** Open **My Assignments**.
+**5.3.5** Actions by status:
 
-**5.5.2** Open a ticket to view details, messages, and current status.
+- Draft → **Send to Records**
+- Disapproved → edit then **Resubmit**
+- Published / others → **View**
 
-**5.5.3** Perform the technical assistance work offline / on-site as required by the request.
+*[Screenshot placeholder]*
+**Figure 32 – My Forms Analytics overview**
 
-**5.5.4** Coordinate with the requestor (Messages / Request messages) until the requestor can mark the service complete.
+*[Screenshot placeholder]*
+**Figure 33 – My Forms cards with status actions**
 
-*[Screenshot placeholder]*  
-**Figure 10 – My Assignments**
+### 5.4 Approvals
 
-### 5.6 My Requests / Submit TA Request
+**5.4.1** Open **Approvals**. Title: **Approvals**. Description: *Review client technical assistance requests before assignment and processing.*
 
-Admin users may also act as requestors.
+**5.4.2** Click **Refresh** if needed.
 
-**5.6.1** Open **Submit TA Request** to submit a personal TA request using a published form.
+**5.4.3** Table columns: Ticket | Client | Division | Status | Action.
 
-**5.6.2** Confirm that PAMANA autofill populated Division/Section, name, email, and designation when your museum username is linked.
+**5.4.4** Row actions: **View file**; **Approve**; **Reject**.
 
-**5.6.3** Complete remaining required fields, optionally use **View form file**, then click **Submit request**.
+**5.4.5** Reject panel: title **Reject request**; placeholder *Reason for rejection*; **Confirm reject** / **Cancel**.
 
-**5.6.4** Open **My Requests** to track your own submissions.
+**5.4.6** Toasts: *Request approved* / *Request rejected*.
 
-**5.6.5** From a ticket detail page you may **Mark service complete**, submit feedback, **Close ticket**, or **Reopen request**, as applicable (same requestor actions as Staff).
+**Important:** Approving sets ticket status to **Open** (not “Approved”). Next assign personnel in Request Management.
 
-*[Screenshot placeholder]*  
-**Figure 11 – Admin My Requests / Submit TA Request**
+*[Screenshot placeholder]*
+**Figure 34 – Approvals list**
 
-### 5.7 Reports
+*[Screenshot placeholder]*
+**Figure 35 – Reject request panel with reason**
 
-The Reports page, titled **Reports & Analytics**, provides summaries of request volume, completion, and client feedback.
+### 5.5 Request Management and Ticket Detail
 
-**5.7.1** Open **Reports** under MAIN.
+**5.5.1** Open **Request Management**. Columns: Ticket | Client | Division | Status | Action (**Manage →**). Empty: *No requests yet.*
 
-**5.7.2** Review charts and summary metrics available on the page.
+*[Screenshot placeholder]*
+**Figure 36 – Request Management list**
 
-**5.7.3** Use the report views to monitor workload and service outcomes for your office.
+**5.5.2** Open a ticket. Header shows ticket number, title, Status badge, Client, Division. Action: **Request messages** (if not closed). Back: Back to approvals / Back to requests.
 
-*[Screenshot placeholder]*  
-**Figure 12 – Reports & Analytics**
+*[Screenshot placeholder]*
+**Figure 37 – Admin ticket detail header**
+
+**5.5.3 Main column panels:**
+
+1. **Uploaded file** — form with submitted answers (view/zoom)
+2. **Submitted answers** — label/value rows
+3. **Client feedback** — when applicable
+4. **Request details** — Form; Submitted by; Division; Created; Assigned personnel; Rejected block if any
+
+*[Screenshot placeholder]*
+**Figure 38 – Admin ticket detail — uploaded file and submitted answers**
+
+**5.5.4 Sidebar — pending approval:** Panel **Approve or reject** with **Approve request** and Rejection reason + **Reject request**.
+
+*[Screenshot placeholder]*
+**Figure 39 – Approve or reject sidebar**
+
+**5.5.5 Sidebar — Assign personnel (after Open):** Notice that only personnel from the **form creator’s division** are listed. Select checkboxes, click **Assign** (**Assigning…**). Toast: *Personnel assigned — status set to In Progress.*
+
+*[Screenshot placeholder]*
+**Figure 40 – Assign personnel sidebar filtered by form owner division**
+
+**5.5.6 Sidebar — Update status** (when allowed): buttons **in progress**, **pending**.
+
+**5.5.7** When resolved: FlowNotice **Waiting for client** (requestor must complete feedback/close).
+
+*[Screenshot placeholder]*
+**Figure 41 – Update status and Waiting for client notices**
+
+### 5.6 My Assignments
+
+**5.6.1** Open **My Assignments**. Title: **My Assigned Requests**.
+
+**5.6.2** Columns: Ticket | Client | Client division | Status | Action (**Open →**). Empty: *No assigned requests.*
+
+**5.6.3** Perform the TA work; use Request messages / Messages to coordinate until the requestor marks complete.
+
+*[Screenshot placeholder]*
+**Figure 42 – My Assignments list**
+
+### 5.7 My Requests / Submit TA Request (Admin as requestor)
+
+**5.7.1** Open **Submit TA Request** (or My Requests → **New request**). Same form UI as Client Submit Request (Section 7.1). Success redirects to My Requests.
+
+*[Screenshot placeholder]*
+**Figure 43 – Admin Submit TA Request**
+
+**5.7.2** Open **My Requests**. Title: **My Requests**. Description: *Your own TA submissions…*
+
+**5.7.3** Columns: Ticket | Form | Status | Assigned to | Submitted | Action (Mark complete → / Submit feedback → / Close request → / **View details**).
+
+*[Screenshot placeholder]*
+**Figure 44 – Admin My Requests list**
+
+**5.7.4** Ticket detail uses the same requestor sidebar as Client: Mark service complete → feedback → Close ticket / Reopen request (see Section 7.2).
+
+*[Screenshot placeholder]*
+**Figure 45 – Admin My Request ticket detail — requestor actions**
+
+### 5.8 Reports
+
+**5.8.1** Open **Reports**. Title: **Reports & Analytics**.
+
+**5.8.2** Stats: Total requests; Pending approval; Closed; With feedback.
+
+**5.8.3** Feedback table: Ticket | Client | Comment | Action (**View request**). Empty: *No feedback yet.*
+
+*[Screenshot placeholder]*
+**Figure 46 – Admin Reports & Analytics**
 
 ---
 
 ## 6. Records Portal
 
-### 6.1 Pending Forms
+### 6.1 Records Dashboard
 
-The Pending Forms page displays forms with status **Pending Review**.
+**6.1.1** Open **Dashboard**. Eyebrow: **Records**. Title: *Welcome, {FirstName}*.
 
-**6.1.1** Open **Pending Forms** to see forms awaiting recommendation.
+**6.1.2** Description: *Review admin-submitted forms and publish approved TA forms for client use.*
 
-**6.1.2** Open a form to review the **Form template** (view-only) and any attached procedure document.
+**6.1.3** Actions: **Review pending (N)** or **Published forms**. Stats: Pending review; Published forms.
 
-**6.1.3** Under **Recommendation**, select **Approve & publish** or **Disapprove**.
+**6.1.4** Panel **Pending forms** with **View file** and **Review**. Empty: *No pending forms.*
 
-**6.1.4** If disapproving, enter remarks so Admin can correct and resubmit.
+*[Screenshot placeholder]*
+**Figure 47 – Records Dashboard**
 
-**6.1.5** Click **Submit recommendation**.
+### 6.2 Pending Forms
 
-**6.1.6** Approved forms become **Published**. Disapproved forms return to Admin with remarks.
+**6.2.1** Open **Pending Forms**. Description: *Forms submitted by Admin with status Pending Review — approve or disapprove before publishing.*
 
-**Note:** Records reviews **forms for publishing**. Client TA **tickets** go to **Admin Approvals**, not to Records.
+**6.2.2** Use **Refresh** and Search (*Search form…*).
 
-*[Screenshot placeholder]*  
-**Figure 13 – Pending Forms / Recommendation**
+**6.2.3** Columns: Form | Submitted by | Submitted | Ref | Action (**View file**, **Review**).
 
-### 6.2 Published Forms
+*[Screenshot placeholder]*
+**Figure 48 – Pending Forms list**
 
-The Published Forms page displays live TA forms available for client submission.
+### 6.3 Form Recommendation (Review)
 
-**6.2.1** Open **Published Forms**.
+**6.3.1** Open a form via **Review**. Title shows form title; meta includes ref, version, Submitted by; Form status badge.
 
-**6.2.2** Review the list of live forms.
+**6.3.2** Panel **Form template** — view only; zoom and scroll the Admin-uploaded template.
 
-**6.2.3** Open a published form when you need to confirm template content after publication.
+*[Screenshot placeholder]*
+**Figure 49 – Form review — Form template (view only)**
 
-*[Screenshot placeholder]*  
-**Figure 14 – Published Forms**
+**6.3.3** Panel **Recommendation**:
 
-### 6.3 Activity Logs
+- Select **Approve & publish** OR **Disapprove**
+- If Disapprove, enter remarks (*Remarks (e.g. Please add required fields)*) — required
+- Click **Submit recommendation** (**Submitting…** / **Submitted — redirecting…**)
 
-The Activity Logs page displays the audit trail of records-related actions.
+**6.3.4** Toasts: *Form published* / *Form returned to admin*.
 
-**6.3.1** Open **Activity Logs**.
+**Note:** Records reviews **forms**. Client TA **tickets** go to Admin Approvals, not Records.
 
-**6.3.2** Review When, Actor, Action, and Summary columns for each event.
+*[Screenshot placeholder]*
+**Figure 50 – Recommendation panel — Approve & publish / Disapprove**
 
-**Note:** Messaging is not available in the Records portal navigation. Records focuses on form review and publishing.
+### 6.4 Published Forms
 
-*[Screenshot placeholder]*  
-**Figure 15 – Activity Logs**
+**6.4.1** Open **Published Forms**. Columns: Form | Ref | Effectivity | Version. Empty: *No published forms.*
+
+*[Screenshot placeholder]*
+**Figure 51 – Published Forms list**
+
+### 6.5 Activity Logs
+
+**6.5.1** Open **Activity Logs**. Columns: When | Actor | Action | Summary. Empty: *No activity yet.*
+
+**Note:** Messaging is not available in Records.
+
+*[Screenshot placeholder]*
+**Figure 52 – Records Activity Logs**
 
 ---
 
@@ -477,177 +629,331 @@ The Activity Logs page displays the audit trail of records-related actions.
 
 ### 7.1 Submit Request
 
-**7.1.1** Open **Submit Request**.
+**7.1.1** Open **Submit Request**. Title: **Submit Request**. Description: *Submitting as {name}. This request will appear in your list only.*
 
-**7.1.2** Under **Published form**, select the TA form you need.
+*[Screenshot placeholder]*
+**Figure 53 – Submit Request page**
 
-**7.1.3** The system loads your requestor profile from PAMANA when your museum username is linked.
+**7.1.2** Panel **Choose a form**. Label **Published form**. Select from dropdown (*Select a form…*).
 
-**7.1.4** Complete any remaining required form fields.
+**7.1.3** Click **View form file** to preview the printable template.
 
-**7.1.5** Click **View form file** to preview how answers appear on the printable template.
+**7.1.4** Review **Your requestor details (auto-filled)** from PAMANA: Division/Section, Designation, First/Middle/Last Name, Email.
 
-**7.1.6** Click **Submit request**. The ticket is created with status **pending approval** for Admin review.
+*[Screenshot placeholder]*
+**Figure 54 – Published form selection and PAMANA autofill block**
 
-*[Screenshot placeholder]*  
-**Figure 16 – Submit Request**
+**7.1.5** Complete remaining dynamic form fields required by the selected form.
 
-### 7.2 My Requests
+**7.1.6** Click **Submit request**. Toast: *Request submitted — Ticket … is pending admin approval.* Status starts as **pending approval**.
 
-**7.2.1** Open **My Requests** to list tickets linked to your account.
+**7.1.7** Validation examples: *Fill in at least one field…*; PAMANA required errors if museum username is not linked. Empty published forms: *No forms available.*
 
-**7.2.2** Click **View details** or the actionable link shown to open the ticket.
+*[Screenshot placeholder]*
+**Figure 55 – Submit Request — filled fields ready to submit**
 
-**7.2.3** Monitor status changes: pending approval → Open (after Admin approval) → in progress (after assignment) → resolved / closed.
+### 7.2 My Requests and Ticket Detail
 
-**7.2.4** When ICT work is finished and the status allows it, click **Mark service complete**.
+**7.2.1** Open **My Requests**. Description: *All tickets linked to your account…* Columns and actions similar to Admin My Requests.
 
-**7.2.5** Complete the Client Satisfaction Survey / feedback step.
+*[Screenshot placeholder]*
+**Figure 56 – Client My Requests list**
 
-**7.2.6** When ready, click **Close ticket**. To continue work, click **Reopen request**.
+**7.2.2** Open **View details**. Main column: Uploaded file; Submitted answers; Request details.
 
-*[Screenshot placeholder]*  
-**Figure 17 – My Requests / ticket detail**
+*[Screenshot placeholder]*
+**Figure 57 – Client ticket detail — main content**
+
+**7.2.3 Sidebar — Assigned personnel.** Shows who was assigned after Admin assignment.
+
+*[Screenshot placeholder]*
+**Figure 58 – Assigned personnel sidebar**
+
+**7.2.4 Sidebar — Complete service.** When status is open / in progress / pending / reopened, click **Mark service complete**. Status becomes **resolved**.
+
+*[Screenshot placeholder]*
+**Figure 59 – Mark service complete**
+
+**7.2.5 Client Feedback panel (after resolved):**
+
+1. Click **Open Client Satisfaction Survey** (requires survey URL configuration)
+2. Optionally enter Notes for admin
+3. Click **I've submitted feedback**
+
+*[Screenshot placeholder]*
+**Figure 60 – Client Satisfaction Survey / feedback confirmation**
+
+**7.2.6 Close request panel:** Click **Close ticket** (status **closed**) or **Reopen request** (status **reopened**).
+
+**7.2.7** When closed: notice **Request closed** — *Thank you for your feedback.*
+
+**7.2.8** Header may show **Request messages** for ticket-linked chat.
+
+*[Screenshot placeholder]*
+**Figure 61 – Close ticket / Reopen request**
 
 ### 7.3 Service Feedback
 
-The Service Feedback page displays requests that still need feedback action. Follow the on-screen survey and confirmation steps for each pending item.
+**7.3.1** Open **Service Feedback**. Sections: **Awaiting feedback**; **Ready to close (N)** with **Close request**.
 
-**7.3.1** Open **Service Feedback**.
+**7.3.2** Empty: *No feedback pending.* Warning appears if the survey URL is not configured.
 
-**7.3.2** Select a pending feedback item.
+*[Screenshot placeholder]*
+**Figure 62 – Service Feedback page**
 
-**7.3.3** Answer the survey questions and submit.
+### 7.4 Client Dashboard Details
 
-**7.3.4** Proceed to close the ticket when prompted / when the workflow allows.
+**7.4.1** Alerts may prompt: Submit feedback; Mark service complete; requests rejected.
 
-*[Screenshot placeholder]*  
-**Figure 18 – Service Feedback**
+**7.4.2** Stats: Active requests; Pending approval; Completed. Recent requests with **View** / **Feedback**.
+
+*[Screenshot placeholder]*
+**Figure 63 – Client Dashboard alerts and recent requests**
 
 ---
 
 ## 8. Shared Features
 
-### 8.1 Messages
+### 8.1 Messages (Admin and Client only)
 
-Available in **Admin** and **Client** portals under **Messages**. Users may open Chats, create a **New message**, **Send** messages, use **Poke**, and open **Request messages** from a ticket detail page.
+**8.1.1** Open **Messages**. Title: **Messages**. Description: *Real-time group chat and direct messages with admin, records, and clients.*
 
-**8.1.1** Open **Messages**.
+*[Screenshot placeholder]*
+**Figure 64 – Messages — chat list**
 
-**8.1.2** Select an existing conversation or start a new one.
+**8.1.2** Sidebar **Chats** with **New**. Empty: *No chats yet.* / *Select a chat…*
 
-**8.1.3** Type your message. Use **@** mentions when available to notify participants.
+**8.1.3** Open a thread. Use composer and **Send**. Use **Poke** to nudge.
 
-**8.1.4** Use **Poke** when you need to nudge another user about an unanswered conversation (as provided by the UI).
+**8.1.4** Dialog **New message**: Search (*Search by name, email, or division…*); sections Admin / Clients; Message or **Poke**.
 
-**8.1.5** From a ticket detail page, open **Request messages** for a ticket-linked thread with the people involved in that request.
+*[Screenshot placeholder]*
+**Figure 65 – New message dialog**
 
-*[Screenshot placeholder]*  
-**Figure 19 – Messages**
+*[Screenshot placeholder]*
+**Figure 66 – Active chat thread with Send and Poke**
+
+**8.1.5** From a ticket detail page, open **Request messages** for a ticket-linked conversation.
+
+*[Screenshot placeholder]*
+**Figure 67 – Request messages from ticket detail**
 
 ### 8.2 Notifications
 
-Click the notification bell in the header.
+**8.2.1** Click the bell in the header.
 
-**8.2.1 Admin** notifications focus on pending approvals, messages, and pokes.
+*[Screenshot placeholder]*
+**Figure 68 – Notification bell dropdown**
 
-**8.2.2 Records** notifications focus on pending forms awaiting review.
+**8.2.2** Typical focus by portal:
 
-**8.2.3 Client** notifications focus on actionable request updates (for example rejected, reopened, or next steps).
-
-*[Screenshot placeholder]*  
-**Figure 20 – Notifications**
+- Admin — pending approvals, messages, pokes (View all → Approvals)
+- Records — pending forms (empty message: *No forms waiting for review*)
+- Client — actionable request updates (*No updates on your requests*)
+- Super Admin — system alerts (*No system alerts*)
 
 ### 8.3 Settings
 
-Open **Settings** from the sidebar footer.
+**8.3.1** Open **Settings** (sidebar footer) or Super Admin **My Profile / Settings**.
 
-**8.3.1** Under **Account**, update Display name, Division / office, and Designation as allowed, then **Save profile**.
+**8.3.2** Title: **Settings**. Description: *Manage your account details and password for this portal.*
 
-**8.3.2** Under **Password**, enter the current password and new password, then **Change password**.
+*[Screenshot placeholder]*
+**Figure 69 – Settings — Account panel**
 
-*[Screenshot placeholder]*  
-**Figure 21 – Settings**
+**8.3.3 Account panel:**
+
+- Email (disabled)
+- Role (disabled: Super Admin / Admin / Records / Staff)
+- **Display name** (*Your name*)
+- **Division / office** (*e.g. ICT*)
+- **Designation** (*e.g. Museum Researcher*)
+- **Save profile** / **Saving…** → toast *Profile updated*
+
+**8.3.4 Password panel:** Current / New / Confirm → **Change password** / **Updating…** → toast *Password changed*
+
+**8.3.5 Validation toasts:** *Name and division are required*; *New password must be at least 6 characters*; *New password and confirmation do not match*
+
+*[Screenshot placeholder]*
+**Figure 70 – Settings — Password panel**
 
 ---
 
-## 9. Status Reference
+## 9. Status Reference and End-to-End Flows
 
 ### 9.1 Form Statuses
 
-**9.1.1 Draft.** Saved by Admin; not yet submitted to Records.
-
-**9.1.2 Pending Review.** Submitted to Records; awaiting recommendation.
-
-**9.1.3 Published.** Approved by Records; available for client submission.
-
-**9.1.4 Disapproved.** Returned to Admin with remarks.
+| Status | Meaning |
+|--------|---------|
+| Draft | Saved by Admin; not yet submitted to Records |
+| Pending Review | Submitted to Records; awaiting recommendation |
+| Published | Approve & publish completed; available for Submit Request |
+| Disapproved | Returned to Admin with remarks |
 
 ### 9.2 Ticket Statuses
 
-**9.2.1 pending approval.** Awaiting Admin approve/reject.
+| Status | Meaning |
+|--------|---------|
+| pending approval | Awaiting Admin approve/reject |
+| open | Set when Admin **Approves** the request |
+| rejected | Rejected with reason |
+| in progress | Set when personnel are **Assigned** |
+| pending | Holding status set by Admin when allowed |
+| resolved | Requestor clicked **Mark service complete** |
+| closed | Requestor clicked **Close ticket** after feedback |
+| reopened | Requestor clicked **Reopen request** |
 
-**9.2.2 open.** Set when Admin **approves** the request. Ticket is active and ready for assignment / processing.
+**Important:** Approve does **not** leave the ticket as “Approved”. The system sets **Open**.
 
-**9.2.3 rejected.** Rejected with reason.
+### 9.3 End-to-End Flow A — Publish a Form
 
-**9.2.4 in progress.** Personnel assigned / work ongoing.
+1. Admin → Form Builder → complete Steps 1–4
+2. Click **Submit to Records** (or draft then **Send to Records** / **Resubmit**)
+3. Form status → Pending Review
+4. Records → Pending Forms → Review
+5. **Approve & publish** → Published OR **Disapprove** + remarks → Disapproved
 
-**9.2.5 pending.** Holding status set by Admin when allowed.
+*[Screenshot placeholder]*
+**Figure 71 – Flow A summary — Form publishing lifecycle**
 
-**9.2.6 resolved.** Requestor marked service complete; feedback/close next.
+### 9.4 End-to-End Flow B — Staff TA Request Lifecycle
 
-**9.2.7 closed.** Closed after feedback.
+1. Staff → Submit Request → select published form → autofill → Submit request → **pending approval**
+2. Admin → Approvals → Approve → status **Open**
+3. Admin → Request Management → Assign personnel (form owner division) → **In Progress**
+4. Assignee works under My Assignments; may Update status (in progress / pending)
+5. Staff → Mark service complete → **resolved**
+6. Staff → Open Client Satisfaction Survey → I've submitted feedback
+7. Staff → Close ticket → **closed** (or Reopen request)
 
-**9.2.8 reopened.** Reopened by requestor for further action.
+*[Screenshot placeholder]*
+**Figure 72 – Flow B summary — Ticket lifecycle from submit to close**
 
-**Important:** Approving a request does **not** leave the ticket in an “Approved” status. The system sets the status to **Open**.
+### 9.5 End-to-End Flow C — Admin as Requestor
 
-### 9.3 End-to-End Workflow Summary
+1. Admin → Submit TA Request / My Requests → New request
+2. Same submission UX as Staff
+3. Ticket appears under Admin My Requests
+4. Another Admin may Approve/Assign via Approvals / Request Management
+5. Requestor completes Mark service complete → feedback → Close on My Requests detail
 
-**Phase 1 — Form publishing**
+*[Screenshot placeholder]*
+**Figure 73 – Flow C summary — Admin personal TA request**
 
-1. Admin builds form in Form Builder (General → Fields → Print Template → Procedure).  
-2. Admin clicks **Submit to Records** (or Save as draft, then Send to Records later).  
-3. Record Admin reviews Pending Forms and chooses **Approve & publish** or **Disapprove** (with remarks).  
-4. Published forms become available under Client **Submit Request** / Admin **Submit TA Request**.
+### 9.6 End-to-End Flow D — Super Admin Portal Switch + RBAC
 
-**Phase 2 — Technical assistance request**
+1. Login as Super Admin → Super Admin Dashboard
+2. Open Admin / Records / Staff via PORTALS / ACCESS or dashboard cards
+3. Use SWITCH PORTAL to return or change portal
+4. Manage Users / Roles / Permissions only under Super Admin
+5. Logout clears all portal sessions
 
-1. Staff (or Admin as requestor) submits via **Submit Request** / **Submit TA Request** → status **pending approval**.  
-2. Admin reviews on **Approvals** → **Approve** sets status to **Open**, or **Reject** with reason.  
-3. Admin opens **Request Management**, assigns personnel from the **form owner’s division** → work tracked under **My Assignments**.  
-4. Assignee performs the service; parties may use Messages / Request messages.  
-5. Requestor clicks **Mark service complete** → submits feedback → **Close ticket** (or **Reopen request** if more work is needed).
+*[Screenshot placeholder]*
+**Figure 74 – Flow D summary — Super Admin multi-portal and RBAC**
 
 ---
 
 ## 10. Frequently Asked Questions
 
-**10.1 Why are my Division / Name / Email empty on the form preview?**  
-Sign in with your museum username so PAMANA can match your employee record. If no PAMANA staff record is found, profile fields cannot auto-fill.
+**10.1 Why are Division / Name / Email empty?** Sign in with museum username linked in PAMANA.
 
-**10.2 Do client submissions go to Records?**  
-No. Records reviews **forms** for publishing. Client TA **tickets** go to **Admin Approvals**.
+**10.2 Do client tickets go to Records?** No. Records reviews forms. Tickets go to Admin Approvals.
 
-**10.3 Can Admin submit a TA request?**  
-Yes. Use **Submit TA Request** and track it under **My Requests**.
+**10.3 Can Admin submit a TA request?** Yes — Submit TA Request / My Requests.
 
-**10.4 Why is Messages missing in Records?**  
-Messaging is available in Admin and Client portals only.
+**10.4 Why is Messages missing in Records?** Messaging is Admin and Client only.
 
-**10.5 Where do I manage Users / Roles / Permissions?**  
-In the **Super Admin** portal only. RBAC was removed from the Admin sidebar.
+**10.5 Where is RBAC?** Super Admin → Users / Roles / Permissions only.
 
-**10.6 After I approve a request, why does it say Open instead of Approved?**  
-That is correct. Approve sets the ticket status to **Open**. Next, assign personnel from **Request Management**.
+**10.6 After Approve, why is status Open?** Correct. Approve sets **Open**; then assign in Request Management.
 
-**10.7 Why is the assignee list limited?**  
-Assignees are filtered to **active Admins in the same division as the form creator** (for example ICT forms → ICT only).
+**10.7 Why is the assignee list limited?** Only active Admins in the **form creator’s division**.
 
-**10.8 What are the current system roles?**  
-Super Admin, Admin (Section Head / Division Head scope), Record Management, and Staff.
+**10.8 What does Mark service complete do?** Sets **resolved** and starts feedback/close steps.
+
+**10.9 Survey link missing?** Service Feedback warns if the Client Satisfaction Survey URL is not configured.
+
+**10.10 What are system roles?** Super Admin, Admin, Record Management, Staff (user).
 
 ---
 
-*— End of Employee User Manual V1.0 —*
+## 11. List of Figures
+
+1. Log-in page (Welcome Back)
+2. Common portal chrome
+3. Super Admin Dashboard
+4. Admin Dashboard
+5. Records Dashboard
+6. Client Dashboard
+7. Super Admin sidebar
+8. Admin sidebar
+9. Records sidebar
+10. Client sidebar
+11. SWITCH PORTAL block
+12. Super Admin stats and portal access
+13. Recent activities feed
+14. Super Admin Reports
+15. Users list
+16. Assign / Manage roles dialog
+17. Roles list
+18. Create role dialog
+19. Manage role permissions
+20. Permissions catalog
+21. Super Admin Settings
+22. Form Management
+23. Activity Logs
+24. System Notifications
+25. Admin Dashboard pending requests
+26. Form Builder step indicator
+27. Form Builder Step 1 General
+28. Form Builder Step 2 Fields
+29. Form Builder Step 3 Print Template
+30. Print preview dialog
+31. Form Builder Step 4 Procedure / Submit
+32. My Forms Analytics
+33. My Forms cards
+34. Approvals list
+35. Reject request panel
+36. Request Management list
+37. Admin ticket header
+38. Uploaded file and answers
+39. Approve or reject sidebar
+40. Assign personnel sidebar
+41. Update status / Waiting for client
+42. My Assignments
+43. Admin Submit TA Request
+44. Admin My Requests
+45. Admin My Request detail
+46. Admin Reports
+47. Records Dashboard
+48. Pending Forms list
+49. Form template view-only
+50. Recommendation panel
+51. Published Forms
+52. Records Activity Logs
+53. Submit Request page
+54. Form selection and PAMANA autofill
+55. Submit Request filled form
+56. Client My Requests
+57. Client ticket main content
+58. Assigned personnel
+59. Mark service complete
+60. Feedback / survey confirmation
+61. Close / Reopen
+62. Service Feedback page
+63. Client Dashboard alerts
+64. Messages chat list
+65. New message dialog
+66. Active chat thread
+67. Request messages
+68. Notification bell
+69. Settings Account
+70. Settings Password
+71. Flow A — Form publishing
+72. Flow B — Ticket lifecycle
+73. Flow C — Admin as requestor
+74. Flow D — Super Admin RBAC / portals
+
+---
+
+*— End of Employee User Manual V2.0 (Detailed Edition) —*
