@@ -42,7 +42,7 @@ export function SettingsPage() {
     onSuccess: ({ user: updated }) => {
       if (activeSlot) {
         const session = getSession(activeSlot);
-        if (session) setSession(activeSlot, { ...session, user: updated });
+        if (session) setSession(activeSlot, { ...session, user: updated }, { notify: false });
       }
       toast.success("Profile updated");
     },

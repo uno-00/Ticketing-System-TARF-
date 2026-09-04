@@ -1,5 +1,5 @@
-/** Standard REQUEST DETAILS → Type options on the TA form. */
-export const TA_SERVICE_TYPE_OPTIONS = [
+/** Optional preset choices for checkbox/dropdown fields on general request forms. */
+export const COMMON_SERVICE_TYPE_OPTIONS = [
   "Information System",
   "Website Update",
   "Event Assistance",
@@ -7,6 +7,9 @@ export const TA_SERVICE_TYPE_OPTIONS = [
   "Software Troubleshooting",
   "Others",
 ] as const;
+
+/** @deprecated Use COMMON_SERVICE_TYPE_OPTIONS */
+export const TA_SERVICE_TYPE_OPTIONS = COMMON_SERVICE_TYPE_OPTIONS;
 
 export function parseCommaSeparatedOptions(text: string): string[] {
   return text
@@ -24,6 +27,11 @@ export function normalizeChoiceFieldOptions(options: string[] | undefined): stri
   return [...raw];
 }
 
+export function commonServiceTypesPlaceholder(): string {
+  return COMMON_SERVICE_TYPE_OPTIONS.join(", ");
+}
+
+/** @deprecated Use commonServiceTypesPlaceholder */
 export function taServiceTypesPlaceholder(): string {
-  return TA_SERVICE_TYPE_OPTIONS.join(", ");
+  return commonServiceTypesPlaceholder();
 }

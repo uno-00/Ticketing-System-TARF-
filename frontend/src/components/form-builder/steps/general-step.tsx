@@ -19,7 +19,7 @@ export function GeneralStep({ draft, update }: GeneralStepProps) {
           <WizardField label="Form title">
             <input
               className={inputCls}
-              placeholder="e.g. Technical Assistance Request"
+              placeholder="e.g. Service Request Form / Facility Request"
               value={draft.title}
               onChange={(e) => update({ title: e.target.value })}
             />

@@ -101,7 +101,7 @@ function AdminLayout() {
             { to: ADMIN_REQUESTS, label: "Request Management", icon: Ticket },
             { to: ADMIN_ASSIGNED, label: "My Assignments", icon: UserCheck },
             { to: ADMIN_MY_REQUESTS, label: "My Requests", icon: Inbox },
-            { to: ADMIN_MY_REQUESTS_SUBMIT, label: "Submit TA Request", icon: Send },
+            { to: ADMIN_MY_REQUESTS_SUBMIT, label: "Submit Request", icon: Send },
           ],
         },
       ]}

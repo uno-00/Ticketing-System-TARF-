@@ -6,6 +6,18 @@ import { requireAuth } from "../middleware/auth.js";
 
 fs.mkdirSync(config.uploadDir, { recursive: true });
 
+const MAX_BYTES = 25 * 1024 * 1024;
+
+/** PDF for forms; images for signatures + rendered print templates. */
+function isAllowed(file: Express.Multer.File): boolean {
+  const name = file.originalname || "";
+  const mime = file.mimetype || "";
+  const isPdf = mime === "application/pdf" || /\.pdf$/i.test(name);
+  const isImage =
+    /^image\/(png|jpeg|webp)$/i.test(mime) || /\.(png|jpe?g|webp)$/i.test(name);
+  return isPdf || isImage;
+}
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, config.uploadDir),
   filename: (_req, file, cb) => {
@@ -16,14 +28,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 15 * 1024 * 1024 },
+  limits: { fileSize: MAX_BYTES },
   fileFilter: (_req, file, cb) => {
-    const isPdf = file.mimetype === "application/pdf" || /\.pdf$/i.test(file.originalname);
-    const isImage =
-      /^image\/(png|jpeg|webp)$/i.test(file.mimetype) ||
-      /\.(png|jpe?g|webp)$/i.test(file.originalname);
-    if (!isPdf && !isImage) {
-      cb(new Error("Only PDF, PNG, JPG, or WebP files are allowed"));
+    if (!isAllowed(file)) {
+      cb(new Error("Only PDF or image files are allowed"));
       return;
     }
     cb(null, true);

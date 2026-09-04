@@ -60,6 +60,8 @@ export function FormBuilderWizard() {
     [draft, stepIdx],
   );
 
+  // Keep the wizard mounted once the session is known — auth re-sync must not
+  // tear down the draft (that feels like an auto-refresh while editing).
   if (isAuthLoading && !user) {
     return <PageLoader label="Loading form builder…" />;
   }

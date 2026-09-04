@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { FormRecord, LiveFormField } from "@/lib/api/types";
 import type { PrintFieldPlacement } from "@/lib/form-builder-store";
 import { DEFAULT_PRINT_PLACEMENT_FONT_SIZE } from "@/lib/form-builder-store";
 import {
-  formatFieldAnswerValue,
   isSignatureImageValue,
   resolveSignatureImageSrc,
 } from "@/lib/form-field-values";
-import { displayValueForChoicePlacement, PLACEMENT_CHECKMARK } from "@/lib/placement-choice-values";
+import { PLACEMENT_CHECKMARK } from "@/lib/placement-choice-values";
 import {
   displayValueForPlacement,
   resolveAnswerForVariable,
@@ -33,16 +32,19 @@ function findFieldForPlacement(fields: LiveFormField[], placementVariable: strin
   );
 }
 
-function renderPlacementLayer(
+/**
+ * Markers only — parent must be the same shell as Form Builder:
+ * relative canvas with --dynamic-text-* / --placement-natural-width,
+ * then `absolute inset-0 placement-scale-root`.
+ * left/top % only — transparent text, no white box, no vertical nudge.
+ */
+function renderPlacementMarkers(
   fields: LiveFormField[],
   placements: PrintFieldPlacement[],
   answers: Record<string, unknown>,
-  fontSize: number,
   options?: BuildPlacementOverlayOptions,
 ) {
-  const fieldTextWidth = Math.round(fontSize * 15);
-
-  const markers = placements
+  return placements
     .map((placement) => {
       const field = findFieldForPlacement(fields, placement.variable);
       const raw = resolveAnswerForVariable(answers, placement.variable);
@@ -53,19 +55,14 @@ function renderPlacementLayer(
         return (
           <span
             key={placement.id}
-            className="pointer-events-none absolute z-20"
-            style={{
-              left: `${placement.xPct}%`,
-              top: `${placement.yPct}%`,
-              transform: "translateY(-100%)",
-            }}
+            className="dynamic-text-anchor pointer-events-none"
+            style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%` }}
             title={placement.label}
           >
             <img
               src={src}
               alt="Signature"
-              className="block max-h-[3em] w-auto object-contain"
-              style={{ maxWidth: fieldTextWidth }}
+              className="placement-signature-img block h-auto object-contain"
             />
           </span>
         );
@@ -81,53 +78,19 @@ function renderPlacementLayer(
       if (!text) return null;
 
       const isCheckmark = text === PLACEMENT_CHECKMARK;
-      const hasAnswer = isCheckmark
-        ? Boolean(
-            field &&
-            displayValueForChoicePlacement(field, placement.label, raw, false) ===
-              PLACEMENT_CHECKMARK,
-          )
-        : Boolean(
-            field
-              ? formatFieldAnswerValue(field, raw).trim()
-              : displayValueForPlacement(
-                  fields,
-                  placement.variable,
-                  placement.label,
-                  answers,
-                  false,
-                ),
-          );
 
       return (
         <span
           key={placement.id}
-          className="pointer-events-none absolute z-20"
-          style={{
-            left: `${placement.xPct}%`,
-            top: `${placement.yPct}%`,
-            transform: "translateY(-100%)",
-            maxWidth: fieldTextWidth,
-          }}
+          className="dynamic-text-anchor pointer-events-none bg-transparent"
+          style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%` }}
           title={placement.label}
         >
           <span
-            className={cn(isCheckmark && "placement-checkmark")}
-            style={{
-              display: "inline-block",
-              color: "#111111",
-              fontSize: isCheckmark ? Math.round(fontSize * 1.15) : fontSize,
-              fontWeight: isCheckmark ? 700 : 400,
-              fontFamily: '"Liberation Sans", Arial, Helvetica, sans-serif',
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "clip",
-              maxWidth: fieldTextWidth,
-              backgroundColor: hasAnswer ? "rgba(255,255,255,0.72)" : "transparent",
-              textShadow: "0 0 2px rgba(255,255,255,0.9)",
-              padding: hasAnswer ? "0 2px" : 0,
-            }}
+            className={cn(
+              "dynamic-text bg-transparent",
+              isCheckmark && "placement-checkmark",
+            )}
           >
             {text}
           </span>
@@ -135,35 +98,50 @@ function renderPlacementLayer(
       );
     })
     .filter(Boolean);
-
-  if (markers.length === 0) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-10 h-full w-full">
-      {markers}
-    </div>
-  );
 }
 
-/** Submitted answers placed on the template. */
+/** CSS vars Form Builder sets on the print canvas — viewers must set the same. */
+export function placementCanvasStyle(
+  fontSize: number,
+  naturalWidth?: number | null,
+): CSSProperties {
+  const fieldTextWidth = Math.round(fontSize * 15);
+  return {
+    "--dynamic-text-size": `${fontSize}px`,
+    "--dynamic-text-width": `${fieldTextWidth}px`,
+    ...(naturalWidth && naturalWidth > 0
+      ? { "--placement-natural-width": naturalWidth }
+      : {}),
+  } as CSSProperties;
+}
+
+/** Submitted answers at exact admin-mapped %. */
 export function buildPlacementOverlay(
   fields: LiveFormField[],
   placements: PrintFieldPlacement[],
   answers: Record<string, unknown>,
-  fontSize = DEFAULT_PRINT_PLACEMENT_FONT_SIZE,
+  _fontSize = DEFAULT_PRINT_PLACEMENT_FONT_SIZE,
 ): ReactNode {
-  return renderPlacementLayer(fields, placements, answers, fontSize);
+  const markers = renderPlacementMarkers(fields, placements, answers);
+  if (!markers.length) return null;
+  return <>{markers}</>;
 }
 
-/** Field labels at saved placements — for Records/Admin layout review before client submit. */
+/** Field labels at saved placements — Records/Admin layout review. */
 export function buildPlacementLayoutOverlay(form: FormRecord): ReactNode {
   const placements = resolveFormPlacements(form);
   if (!placements.length) return null;
-  return renderPlacementLayer(form.fields, placements, {}, resolveFormPlacementFontSize(form), {
+  const markers = renderPlacementMarkers(form.fields, placements, {}, {
     showLabelWhenEmpty: true,
   });
+  if (!markers.length) return null;
+  return <>{markers}</>;
 }
 
 export function canShowFilledTemplate(form: FormRecord | null | undefined): form is FormRecord {
   return Boolean(form?.printTemplateImagePath?.trim() && resolveFormPlacements(form).length > 0);
+}
+
+export function resolveOverlayFontSize(form: FormRecord): number {
+  return resolveFormPlacementFontSize(form) || DEFAULT_PRINT_PLACEMENT_FONT_SIZE;
 }

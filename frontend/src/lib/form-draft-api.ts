@@ -33,19 +33,21 @@ export function draftToApiBody(draft: FormDraft) {
   };
 }
 
-/** Upload template image if still a data URL, then return API body. */
+/** Upload rendered template image (preferred) then return API body. */
 export async function draftToApiBodyWithUploads(draft: FormDraft) {
   const body = draftToApiBody(draft) as Record<string, unknown>;
 
-  if (draft.printTemplateImagePath?.trim()) {
-    body.printTemplateImagePath = draft.printTemplateImagePath.trim();
+  // Always prefer the rendered canvas PNG. Form Builder may still hold a raw PDF
+  // path from the initial upload; placements are positioned on the stacked image.
+  if (draft.printTemplateImage?.startsWith("data:")) {
+    const file = await dataUrlToFile(draft.printTemplateImage, `template-${draft.refNumber}.png`);
+    const { file: uploaded } = await api.uploadFile(file);
+    body.printTemplateImagePath = uploaded.url;
     return body;
   }
 
-  if (draft.printTemplateImage?.startsWith("data:")) {
-    const file = await dataUrlToFile(draft.printTemplateImage, `template-${draft.refNumber}`);
-    const { file: uploaded } = await api.uploadFile(file);
-    body.printTemplateImagePath = uploaded.url;
+  if (draft.printTemplateImagePath?.trim()) {
+    body.printTemplateImagePath = draft.printTemplateImagePath.trim();
     return body;
   }
 

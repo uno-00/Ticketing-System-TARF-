@@ -72,7 +72,7 @@ class TicketService
                 ),
                 $answers,
             );
-            // Always keep a login email on the TA form even without PAMANA.
+            // Always keep a login email on the request form even without PAMANA.
             if (trim((string) ($mergedAnswers['{{prof_email}}'] ?? '')) === '') {
                 $mergedAnswers['{{prof_email}}'] = (string) ($ticketingUser?->email ?: $user->email);
             }

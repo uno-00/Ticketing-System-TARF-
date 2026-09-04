@@ -1,10 +1,16 @@
 import { useRef, useState } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api/client";
+import { SectionHeader, WizardCard, WizardField } from "../shared";
 import type { FormDraft } from "@/lib/form-builder-store";
+import { api } from "@/lib/api/client";
+import {
+  isAllowedUpload,
+  MAX_UPLOAD_MB,
+  SUPPORTING_DOC_ACCEPT,
+  uploadTooLarge,
+} from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
-import { SectionHeader, WizardCard } from "../shared";
 
 type ProcedureStepProps = {
   draft: FormDraft;
@@ -13,17 +19,16 @@ type ProcedureStepProps = {
 
 export function ProcedureStep({ draft, update }: ProcedureStepProps) {
   const [uploading, setUploading] = useState(false);
-  const [fileDragOver, setFileDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (file: File | undefined) => {
+  const onFile = async (file: File | undefined) => {
     if (!file || uploading) return;
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Please upload a PDF file.");
+    if (!isAllowedUpload(file.name, file.type)) {
+      toast.error("Only PDF files are allowed.");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("PDF is too large (max 15 MB).");
+    if (uploadTooLarge(file.size)) {
+      toast.error(`File is too large (max ${MAX_UPLOAD_MB} MB).`);
       return;
     }
     setUploading(true);
@@ -33,67 +38,51 @@ export function ProcedureStep({ draft, update }: ProcedureStepProps) {
         workProcedureName: uploaded.originalName,
         workProcedurePath: uploaded.url,
       });
-      toast.success("Procedure document uploaded");
+      toast.success("Supporting document uploaded");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
-  const onFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setFileDragOver(false);
-    void handleFile(e.dataTransfer.files?.[0]);
-  };
-
   return (
-    <WizardCard>
+    <WizardCard className="space-y-6">
       <SectionHeader
-        title="Work procedure"
-        subtitle="Upload the SOP that accompanies this form (PDF only)."
+        title="Supporting document"
+        subtitle="Optional — upload an SOP, guidelines, or any supporting PDF that accompanies this form."
       />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf,.pdf"
-        className="hidden"
-        disabled={uploading}
-        onChange={(e) => void handleFile(e.target.files?.[0])}
-      />
-      <label
-        className={cn(
-          "mt-6 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-paper p-12 text-center transition-colors hover:border-maroon/40 hover:bg-maroon/5",
-          fileDragOver && "border-maroon/50 bg-maroon/8",
-          uploading && "pointer-events-none opacity-70",
-        )}
-        onClick={() => fileInputRef.current?.click()}
-        onDragEnter={(e) => {
-          e.preventDefault();
-          setFileDragOver(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) setFileDragOver(false);
-        }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onFileDrop}
-      >
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-maroon/10 text-maroon">
-          {uploading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Upload className="h-5 w-5" />
+      <WizardField label="Attachment (optional)">
+        <label
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center transition-colors hover:bg-muted/50",
+            uploading && "pointer-events-none opacity-70",
           )}
-        </div>
-        <div className="mt-3 text-sm font-medium text-foreground">
-          {draft.workProcedureName || "Drop a PDF or click to browse"}
-        </div>
-        <div className="mt-1 text-xs text-muted-foreground">PDF only · max 15 MB</div>
-      </label>
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept={SUPPORTING_DOC_ACCEPT}
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => void onFile(e.target.files?.[0])}
+          />
+          {uploading ? (
+            <Loader2 className="h-8 w-8 animate-spin text-maroon" />
+          ) : (
+            <FileUp className="h-8 w-8 text-muted-foreground" />
+          )}
+          <div className="text-sm font-medium text-foreground">
+            {draft.workProcedureName || "Drop a file or click to browse"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            PDF only · max {MAX_UPLOAD_MB} MB
+          </div>
+        </label>
+      </WizardField>
       {draft.workProcedurePath ? (
-        <p className="mt-2 text-center text-xs text-green-700">
+        <p className="text-sm text-green-700">
           ✓ {draft.workProcedureName || "Document"} ready for Records review
         </p>
       ) : null}

@@ -3,7 +3,6 @@ import type { TicketRecord } from "@/lib/api/types";
 import { FormTemplateFileViewer } from "@/components/documents/FormTemplateFileViewer";
 import { ViewOnlyDocumentViewer } from "@/components/documents/ViewOnlyDocumentViewer";
 import { api } from "@/lib/api/client";
-import { isPdfPath } from "@/lib/media-url";
 import { resolveFormPlacements } from "@/lib/placement-values";
 import type { PortalSlot } from "@/lib/sessions";
 
@@ -41,7 +40,7 @@ export function TicketSubmittedFileViewer({
   const hasPlacements = Boolean(form && templateSrc && placements.length > 0);
 
   const workProcedurePath = form?.workProcedurePath?.trim() ?? "";
-  const hasWorkProcedure = Boolean(workProcedurePath && isPdfPath(workProcedurePath));
+  const hasWorkProcedure = Boolean(workProcedurePath);
 
   const attachment = ticket.attachmentUrl?.trim() || null;
   const fallbackSrc = attachment || templateSrc;
@@ -62,7 +61,7 @@ export function TicketSubmittedFileViewer({
     hasWorkProcedure && form?.workProcedureName?.trim()
       ? `${alt} + ${form.workProcedureName.trim()}`
       : hasWorkProcedure
-        ? `${alt} + work procedure`
+        ? `${alt} + supporting document`
         : alt;
 
   if (hasPlacements && form) {

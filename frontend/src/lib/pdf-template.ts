@@ -25,27 +25,92 @@ export async function getPdfDisplayHeight(blob: Blob, displayWidth: number): Pro
   return Math.ceil(totalHeight);
 }
 
-/** Renders the first page of a PDF to a PNG data URL for the print canvas. */
-export async function pdfFirstPageToDataUrl(
+async function renderPdfPageToCanvas(
+  page: pdfjs.PDFPageProxy,
+  maxWidth: number,
+): Promise<HTMLCanvasElement> {
+  const baseViewport = page.getViewport({ scale: 1 });
+  const scale = Math.min(2, maxWidth / baseViewport.width);
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not create canvas for PDF rendering.");
+  await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+  return canvas;
+}
+
+/** Renders one PDF page (1-based) to a PNG data URL. */
+export async function pdfPageToDataUrl(
+  file: File,
+  pageNumber: number,
+  options?: { maxWidth?: number },
+): Promise<{ dataUrl: string; pageCount: number }> {
+  const maxWidth = options?.maxWidth ?? 1600;
+  const data = new Uint8Array(await file.arrayBuffer());
+  const doc = await pdfjs.getDocument({ data }).promise;
+  const pageCount = doc.numPages;
+  const safePage = Math.min(Math.max(1, pageNumber), pageCount);
+  const page = await doc.getPage(safePage);
+  const canvas = await renderPdfPageToCanvas(page, maxWidth);
+  return { dataUrl: canvas.toDataURL("image/png"), pageCount };
+}
+
+/**
+ * Renders every PDF page stacked vertically into one PNG so multi-page forms
+ * can receive field placements across the full document.
+ */
+export async function pdfAllPagesStackedToDataUrl(
   file: File,
   options?: { maxWidth?: number },
 ): Promise<{ dataUrl: string; pageCount: number }> {
   const maxWidth = options?.maxWidth ?? 1600;
   const data = new Uint8Array(await file.arrayBuffer());
   const doc = await pdfjs.getDocument({ data }).promise;
-  const page = await doc.getPage(1);
-  const baseViewport = page.getViewport({ scale: 1 });
-  const scale = Math.min(2, maxWidth / baseViewport.width);
-  const viewport = page.getViewport({ scale });
+  const pageCount = doc.numPages;
+  const pageCanvases: HTMLCanvasElement[] = [];
 
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
-  const ctx = canvas.getContext("2d");
+  for (let pageNum = 1; pageNum <= pageCount; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    pageCanvases.push(await renderPdfPageToCanvas(page, maxWidth));
+  }
+
+  const width = Math.max(...pageCanvases.map((c) => c.width), 1);
+  const height = pageCanvases.reduce((sum, c) => sum + c.height, 0);
+  const stacked = document.createElement("canvas");
+  stacked.width = width;
+  stacked.height = height;
+  const ctx = stacked.getContext("2d");
   if (!ctx) throw new Error("Could not create canvas for PDF rendering.");
 
-  await page.render({ canvas, canvasContext: ctx, viewport }).promise;
-  return { dataUrl: canvas.toDataURL("image/png"), pageCount: doc.numPages };
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  let y = 0;
+  for (const pageCanvas of pageCanvases) {
+    const x = Math.floor((width - pageCanvas.width) / 2);
+    ctx.drawImage(pageCanvas, x, y);
+    y += pageCanvas.height;
+  }
+
+  return { dataUrl: stacked.toDataURL("image/png"), pageCount };
+}
+
+/** Renders every page of a PDF blob stacked into one PNG (matches Form Builder placements). */
+export async function pdfBlobAllPagesStackedToDataUrl(
+  blob: Blob,
+  options?: { maxWidth?: number },
+): Promise<{ dataUrl: string; pageCount: number }> {
+  const file = new File([blob], "document.pdf", { type: blob.type || "application/pdf" });
+  return pdfAllPagesStackedToDataUrl(file, options);
+}
+
+/** Renders the first page of a PDF to a PNG data URL for the print canvas. */
+export async function pdfFirstPageToDataUrl(
+  file: File,
+  options?: { maxWidth?: number },
+): Promise<{ dataUrl: string; pageCount: number }> {
+  return pdfPageToDataUrl(file, 1, options);
 }
 
 /** Renders the first page of a PDF blob to a PNG data URL for overlay previews. */

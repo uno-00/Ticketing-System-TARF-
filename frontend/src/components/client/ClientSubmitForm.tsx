@@ -23,6 +23,7 @@ import { fieldHasAnswer } from "@/lib/form-field-values";
 import { CLIENT_REQUESTS } from "@/lib/navigation";
 import { mergeRequesterProfileIntoAnswers } from "@/lib/profile-placement-fields";
 import { dataUrlToFile } from "@/lib/upload-data-url";
+import { isAllowedUpload, MAX_UPLOAD_MB, uploadTooLarge } from "@/lib/upload-limits";
 
 type ClientSubmitFormProps = {
   initialFormId?: string;
@@ -69,34 +70,38 @@ export function ClientSubmitForm({
   const { data: formsData, isLoading: formsLoading } = useQuery({
     queryKey: ["published-forms"],
     queryFn: () => api.publishedForms(),
+    staleTime: 5 * 60_000,
   });
 
   const { data: formData, isLoading: formLoading } = useQuery({
     queryKey: ["published-form", selectedFormId],
     queryFn: () => api.getPublishedForm(selectedFormId),
     enabled: Boolean(selectedFormId),
+    staleTime: 5 * 60_000,
   });
 
   const { data: requesterData, isLoading: requesterLoading } = useQuery({
     queryKey: ["requester-profile", "client", user?.id],
     queryFn: () => api.requesterProfile("client"),
     enabled: Boolean(user?.id),
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60_000,
   });
 
   useEffect(() => {
     if (initialFormId) setSelectedFormId(initialFormId);
   }, [initialFormId]);
 
-  // Persist PAMANA {{prof_*}} into local answers so View form file always has them.
+  // Apply PAMANA profile once — do not re-merge on every refetch (that fights typing).
+  const profileAppliedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!requesterData?.found || !requesterData.values) return;
+    if (!requesterData?.found || !requesterData.values || !user?.id) return;
+    if (profileAppliedFor.current === user.id) return;
     const values = requesterData.values;
     const hasData = Object.values(values).some((v) => String(v ?? "").trim() !== "");
     if (!hasData) return;
+    profileAppliedFor.current = user.id;
     setAnswers((prev) => ({ ...prev, ...values }));
-  }, [requesterData]);
+  }, [requesterData, user?.id]);
 
   const form = formData?.form;
 
@@ -195,8 +200,12 @@ export function ClientSubmitForm({
   };
 
   const handleFieldFileUpload = async (field: LiveFormField, file: File) => {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (!isAllowedUpload(file.name, file.type)) {
       toast.error("Only PDF files are allowed.");
+      return;
+    }
+    if (uploadTooLarge(file.size)) {
+      toast.error(`File is too large (max ${MAX_UPLOAD_MB} MB).`);
       return;
     }
     setUploading(true);
@@ -211,7 +220,7 @@ export function ClientSubmitForm({
     }
   };
 
-  if (formsLoading) {
+  if (formsLoading && !formsData) {
     return <PanelLoading label="Loading available forms…" />;
   }
 
@@ -265,7 +274,7 @@ export function ClientSubmitForm({
           </FormSelect>
         </div>
 
-        {selectedFormId && formLoading ? (
+        {selectedFormId && formLoading && !form ? (
           <PanelLoading label="Loading form fields…" />
         ) : form ? (
           <>

@@ -85,9 +85,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Already have a local session — keep the UI mounted and refresh /me in the background.
+      // Flipping isAuthLoading/sessionReady here remounts forms and wipes in-progress answers.
+      const hasLocalUser = Boolean(saved.user);
       if (!cancelled) {
-        setIsAuthLoading(true);
-        setSessionReady(false);
+        if (hasLocalUser) {
+          setUser(saved.user);
+          setSessionReady(true);
+          setIsAuthLoading(false);
+        } else {
+          setIsAuthLoading(true);
+          setSessionReady(false);
+        }
       }
 
       api
@@ -106,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(slot, null, { notify: false });
             setSessions(readSessionsMap());
             setUser(null);
-          } else {
+          } else if (!hasLocalUser) {
             setUser(saved.user);
           }
           setSessionReady(true);
@@ -118,7 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const onAuthChanged = () => {
       const slot = pathToSlot(window.location.pathname);
-      void queryClient.invalidateQueries();
+      // Do not invalidateQueries here — that remounts/refetches pages and wipes
+      // in-progress Form Builder / Submit Request answers while the user is typing.
       sync(slot);
     };
 
@@ -155,6 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession("client", payload, { notify: false });
       }
       notifySessionChanged(slot);
+      // Refresh portal data once after login (not on every session sync).
+      void queryClient.invalidateQueries();
 
       setSessions(readSessionsMap());
 

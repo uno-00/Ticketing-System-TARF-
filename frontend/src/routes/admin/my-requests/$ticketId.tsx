@@ -122,9 +122,9 @@ function AdminMyRequestDetailPage() {
                 <p className="text-sm font-medium">{formatAssignedPersonnel(ticket.assignedTo)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {ticket.status === "in_progress"
-                    ? "Your request is being handled by assigned ICT personnel."
+                    ? "Your request is being handled by assigned personnel."
                     : ticket.assignedTo?.length
-                      ? "ICT personnel assigned to your request."
+                      ? "Personnel assigned to your request."
                       : "An admin will assign personnel after your request is approved."}
                 </p>
               </div>
@@ -137,7 +137,7 @@ function AdminMyRequestDetailPage() {
               description={
                 showFeedbackStep
                   ? "Submit the official feedback survey, then confirm below to close this request."
-                  : "Mark the service as done when ICT work is finished."
+                  : "Mark the service as done when the work is finished."
               }
             >
               {showCompleteButton ? (

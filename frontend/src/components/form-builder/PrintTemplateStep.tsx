@@ -37,12 +37,13 @@ import {
 } from "@/lib/placement-choice-values";
 import { api } from "@/lib/api/client";
 import { DEFAULT_PROFILE_PLACEMENT_FIELDS } from "@/lib/profile-placement-fields";
+import {
+  isAllowedPrintTemplate,
+  MAX_UPLOAD_MB,
+  TEMPLATE_ACCEPT,
+  uploadTooLarge,
+} from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
-
-const MAX_TEMPLATE_IMAGE_BYTES = 4 * 1024 * 1024;
-const MAX_TEMPLATE_PDF_BYTES = 15 * 1024 * 1024;
-
-const TEMPLATE_ACCEPT = "image/png,image/jpeg,image/webp,application/pdf,.pdf";
 
 function clampPct(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -138,56 +139,32 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
     const file = fileList?.[0];
     if (!file || isUploading) return;
 
-    const pdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    const image =
-      /^image\/(png|jpeg|webp)$/i.test(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name);
-
-    if (!pdf && !image) {
-      toast.error("Upload a PNG, JPG, WebP, or PDF file.");
+    if (!isAllowedPrintTemplate(file.name, file.type)) {
+      toast.error("Only PDF files are allowed.");
       return;
     }
 
-    const maxBytes = pdf ? MAX_TEMPLATE_PDF_BYTES : MAX_TEMPLATE_IMAGE_BYTES;
-    if (file.size > maxBytes) {
-      toast.error(
-        pdf
-          ? "PDF is too large (max 15 MB). Try compressing or export a smaller file."
-          : "Image is too large (max 4 MB). Try compressing or a smaller scan.",
-      );
+    if (uploadTooLarge(file.size)) {
+      toast.error(`File is too large (max ${MAX_UPLOAD_MB} MB). Try compressing the PDF.`);
       return;
     }
 
     setIsUploading(true);
     try {
-      const { file: uploaded } = await api.uploadFile(file);
-
-      if (pdf) {
-        const { isPdfFile: checkPdf, pdfFirstPageToDataUrl } = await import("@/lib/pdf-template");
-        if (!checkPdf(file)) {
-          toast.error("Upload a PNG, JPG, WebP, or PDF file.");
-          return;
-        }
-        const { dataUrl, pageCount } = await pdfFirstPageToDataUrl(file);
-        applyTemplateDataUrl(
-          dataUrl,
-          uploaded.url,
-          pageCount > 1
-            ? `PDF uploaded (page 1 of ${pageCount}). Drag fields onto the form.`
-            : "PDF uploaded. Drag fields onto the form.",
-        );
-      } else {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error("read failed"));
-          reader.readAsDataURL(file);
-        });
-        applyTemplateDataUrl(
-          dataUrl,
-          uploaded.url,
-          "Template uploaded. Drag fields onto the form.",
-        );
-      }
+      const { pdfAllPagesStackedToDataUrl } = await import("@/lib/pdf-template");
+      const { dataUrlToFile } = await import("@/lib/upload-data-url");
+      const { dataUrl, pageCount } = await pdfAllPagesStackedToDataUrl(file);
+      // Upload the stacked PNG used for placements — not the raw PDF — so Records
+      // and Client see the same canvas Admin laid fields on.
+      const pngFile = await dataUrlToFile(dataUrl, file.name.replace(/\.pdf$/i, "") || "template");
+      const { file: uploaded } = await api.uploadFile(pngFile);
+      applyTemplateDataUrl(
+        dataUrl,
+        uploaded.url,
+        pageCount > 1
+          ? `PDF uploaded (${pageCount} pages stacked). Drag fields onto any page.`
+          : "PDF uploaded. Drag fields onto the form.",
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not upload template.");
     } finally {
@@ -492,7 +469,7 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                 </div>
               ) : (
                 <span className="text-xs text-muted-foreground">
-                  PNG, JPG, WebP, or PDF · images up to 4 MB · PDF up to 15 MB
+                  PDF only · up to {MAX_UPLOAD_MB} MB · multi-page PDFs are stacked
                 </span>
               )}
               <div className="flex flex-wrap gap-2">
@@ -540,7 +517,7 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                     Preparing your template…
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    PDFs use page 1 as the placement preview
+                    PDFs stack all pages vertically for field placement
                   </span>
                 </div>
               ) : !image ? (
@@ -566,7 +543,7 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                   </span>
                   <span className="text-base font-medium text-foreground">Drop your form here</span>
                   <span className="max-w-md text-sm text-muted-foreground">
-                    PNG, JPG, WebP, or PDF — blank scan or exported form (first PDF page is used)
+                    PDF only — blank form export (all pages are stacked for field placement)
                   </span>
                   <span className="mt-1 inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 text-sm font-medium text-secondary-foreground">
                     Choose file

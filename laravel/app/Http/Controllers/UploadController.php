@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\File;
 
 class UploadController extends Controller
 {
+    private const MAX_BYTES = 25 * 1024 * 1024;
+
     public function store(Request $request): JsonResponse
     {
         if (! $request->hasFile('file')) {
@@ -22,16 +24,13 @@ class UploadController extends Controller
 
         $mime = (string) $file->getMimeType();
         $original = (string) $file->getClientOriginalName();
-        $isPdf = $mime === 'application/pdf' || preg_match('/\.pdf$/i', $original);
-        $isImage = (bool) preg_match('#^image/(png|jpeg|webp)$#i', $mime)
-            || (bool) preg_match('/\.(png|jpe?g|webp)$/i', $original);
 
-        if (! $isPdf && ! $isImage) {
-            throw new ApiException(400, 'Only PDF, PNG, JPG, or WebP files are allowed');
+        if (! $this->isAllowed($mime, $original)) {
+            throw new ApiException(400, 'Only PDF or image files are allowed');
         }
 
-        if ($file->getSize() > 15 * 1024 * 1024) {
-            throw new ApiException(400, 'File too large (max 15MB)');
+        if ($file->getSize() > self::MAX_BYTES) {
+            throw new ApiException(400, 'File too large (max 25MB)');
         }
 
         $dir = $this->uploadDir();
@@ -53,6 +52,16 @@ class UploadController extends Controller
                 'url' => '/uploads/'.$filename,
             ],
         ], 201);
+    }
+
+    /** PDF for forms; images for signatures + rendered print templates. */
+    private function isAllowed(string $mime, string $original): bool
+    {
+        $isPdf = $mime === 'application/pdf' || (bool) preg_match('/\.pdf$/i', $original);
+        $isImage = (bool) preg_match('#^image/(png|jpeg|webp)$#i', $mime)
+            || (bool) preg_match('/\.(png|jpe?g|webp)$/i', $original);
+
+        return $isPdf || $isImage;
     }
 
     private function uploadDir(): string

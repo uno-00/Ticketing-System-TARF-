@@ -36,7 +36,7 @@ function AdminMyRequestsPage() {
     <div className="page-shell">
       <WorkspacePageHeader
         title="My Requests"
-        description="Your own technical assistance submissions. Use this when you need ICT support as a requestor."
+        description="Your own support request submissions. Use this when you need assistance as a requestor."
         actions={<ActionLink to={ADMIN_MY_REQUESTS_SUBMIT}>New request</ActionLink>}
       />
 

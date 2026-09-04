@@ -45,7 +45,7 @@ function withProfileFields(fields: LiveFormField[]): LiveFormField[] {
 
 /**
  * Uploaded template + field placements.
- * Same CSS overlay path for Admin, Records, and Client so fonts/positions match Form Builder.
+ * Exact same left/top % and CSS canvas as Form Builder — no position auto-adjust.
  */
 export function FormTemplateFileViewer({
   form,
@@ -60,6 +60,7 @@ export function FormTemplateFileViewer({
   const templateSrc = form.printTemplateImagePath?.trim() ?? null;
   const placements = useMemo(() => resolveFormPlacements(form), [form]);
   const fields = useMemo(() => withProfileFields(form.fields ?? []), [form.fields]);
+  const placementFontSize = resolveFormPlacementFontSize(form);
   const hasPlacements = placements.length > 0;
   const filled = hasFilledAnswers(answers);
   const hasProfileAnswers = Boolean(
@@ -69,8 +70,6 @@ export function FormTemplateFileViewer({
           key.includes("prof_") && typeof value === "string" && value.trim() !== "",
       ),
   );
-  // Client/ticket preview always passes `answers` — paint real values (or blanks),
-  // never the layout field labels ("First Name", "Division/Section", …).
   const previewMode = answers !== undefined;
   const showFilledOverlay = previewMode || filled || hasProfileAnswers;
 
@@ -84,20 +83,22 @@ export function FormTemplateFileViewer({
   const overlay = useMemo(() => {
     if (!hasPlacements) return undefined;
     if (showFilledOverlay) {
-      // Always return a layer in preview mode so the PDF path stays on MappedFormPage.
       return (
-        buildPlacementOverlay(
-          fields,
-          placements,
-          answers ?? {},
-          resolveFormPlacementFontSize(form),
-        ) ?? (
+        buildPlacementOverlay(fields, placements, answers ?? {}, placementFontSize) ?? (
           <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden />
         )
       );
     }
     return buildPlacementLayoutOverlay(form);
-  }, [form, fields, hasPlacements, showFilledOverlay, answers, placements]);
+  }, [
+    form,
+    fields,
+    hasPlacements,
+    showFilledOverlay,
+    answers,
+    placements,
+    placementFontSize,
+  ]);
 
   if (!templateSrc) {
     return <EmptyState title="No template uploaded" description={emptyMessage} />;
@@ -111,6 +112,7 @@ export function FormTemplateFileViewer({
       alt={fileLabel}
       fileLabel={fileLabel}
       overlay={overlay}
+      placementFontSize={placementFontSize}
       className={className}
       viewportClassName={viewportClassName}
       fillHeight={fillHeight}

@@ -1,11 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DocumentViewerDialog } from "@/components/documents/DocumentViewerDialog";
 import { FormUploadedFileViewer } from "@/components/records/FormUploadedFileViewer";
 import { api } from "@/lib/api/client";
 
@@ -31,26 +25,24 @@ export function FormPdfViewerDialog({
   });
 
   const form = data?.form;
+  const title = formTitle
+    ? `${formTitle}${refNumber ? ` (${refNumber})` : ""}`
+    : "Uploaded file";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] max-h-[100dvh] !w-screen !max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:!max-w-none">
-        <DialogHeader className="border-b border-border/80 px-6 py-4 text-left">
-          <DialogTitle>
-            {formTitle ? `${formTitle}${refNumber ? ` (${refNumber})` : ""}` : "Uploaded file"}
-          </DialogTitle>
-          <DialogDescription>Uploaded form template. View only.</DialogDescription>
-        </DialogHeader>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
-          {isLoading ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">Loading file…</p>
-          ) : isError || !form ? (
-            <p className="py-16 text-center text-sm text-destructive">Could not load file.</p>
-          ) : (
-            <FormUploadedFileViewer form={form} enabled={open} fillHeight className="h-full" />
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <DocumentViewerDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description="Uploaded form template. View only."
+    >
+      {isLoading ? (
+        <p className="py-16 text-center text-sm text-muted-foreground">Loading file…</p>
+      ) : isError || !form ? (
+        <p className="py-16 text-center text-sm text-destructive">Could not load file.</p>
+      ) : (
+        <FormUploadedFileViewer form={form} enabled={open} />
+      )}
+    </DocumentViewerDialog>
   );
 }

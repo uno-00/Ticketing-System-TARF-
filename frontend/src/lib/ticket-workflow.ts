@@ -2,7 +2,7 @@ import type { TicketRecord } from "@/lib/api/types";
 
 const COMPLETABLE_STATUSES = ["open", "in_progress", "pending", "reopened"] as const;
 
-/** ICT work in progress — client may mark service complete when satisfied. */
+/** Work in progress — client may mark service complete when satisfied. */
 export function ticketCanMarkComplete(ticket: Pick<TicketRecord, "status">) {
   return COMPLETABLE_STATUSES.includes(ticket.status as (typeof COMPLETABLE_STATUSES)[number]);
 }

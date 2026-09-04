@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { LiveFormField } from "@/lib/api/types";
 import { normalizeChoiceOptionsForField } from "@/lib/form-field-normalize";
+import { CLIENT_FILE_FIELD_ACCEPT, MAX_UPLOAD_MB } from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
 
 type ClientFieldInputProps = {
@@ -241,11 +242,11 @@ export function ClientFieldInput({
                 ? "Uploading…"
                 : typeof value === "string" && value
                   ? "File uploaded"
-                  : "Choose PDF file"}
+                  : "Choose file"}
             </span>
             <input
               type="file"
-              accept="application/pdf,.pdf"
+              accept={CLIENT_FILE_FIELD_ACCEPT}
               className="hidden"
               disabled={uploading}
               onChange={(e) => {
@@ -258,7 +259,9 @@ export function ClientFieldInput({
           {typeof value === "string" && value ? (
             <p className="text-xs text-green-700">✓ File ready to submit</p>
           ) : (
-            <p className="text-xs text-muted-foreground">PDF only.</p>
+            <p className="text-xs text-muted-foreground">
+              PDF only · max {MAX_UPLOAD_MB} MB
+            </p>
           )}
         </div>
       );

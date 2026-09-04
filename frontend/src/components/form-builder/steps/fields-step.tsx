@@ -7,9 +7,9 @@ import {
   type FormField,
 } from "@/lib/form-builder-store";
 import {
-  TA_SERVICE_TYPE_OPTIONS,
+  COMMON_SERVICE_TYPE_OPTIONS,
   normalizeChoiceFieldOptions,
-  taServiceTypesPlaceholder,
+  commonServiceTypesPlaceholder,
 } from "@/lib/form-builder/ta-service-types";
 import { FIELD_ELEMENTS } from "@/lib/form-builder/constants";
 import { inputCls, SectionHeader, WizardCard, WizardField } from "../shared";
@@ -98,7 +98,7 @@ export function FieldsStep({ draft, update }: FieldsStepProps) {
         ? {
             options:
               type === "checkbox"
-                ? [...TA_SERVICE_TYPE_OPTIONS]
+                ? [...COMMON_SERVICE_TYPE_OPTIONS]
                 : ["Option 1", "Option 2"],
           }
         : {}),
@@ -240,7 +240,7 @@ export function FieldsStep({ draft, update }: FieldsStepProps) {
                 <input
                   className={inputCls}
                   value={optionsDraft}
-                  placeholder={taServiceTypesPlaceholder()}
+                  placeholder={commonServiceTypesPlaceholder()}
                   onChange={(e) => setOptionsDraft(e.target.value)}
                   onBlur={() => commitOptionsDraft(selected.id)}
                 />
@@ -249,16 +249,16 @@ export function FieldsStep({ draft, update }: FieldsStepProps) {
                     type="button"
                     className="mt-2 text-xs font-medium text-maroon hover:underline"
                     onClick={() => {
-                      const text = taServiceTypesPlaceholder();
+                      const text = commonServiceTypesPlaceholder();
                       setOptionsDraft(text);
                       commitOptionsDraft(selected.id, text);
                     }}
                   >
-                    Use TA service types (6 options)
+                    Use common service types (6 options)
                   </button>
                 ) : null}
                 <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                  Separate each choice with a comma. Client can check all services that apply.
+                  Separate each choice with a comma. Edit freely for any form type — these presets are optional.
                 </p>
               </WizardField>
             )}

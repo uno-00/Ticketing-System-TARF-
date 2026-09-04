@@ -1920,6 +1920,10 @@
     white-space: nowrap;
     text-overflow: clip;
     text-align: left;
+    background: transparent;
+    box-shadow: none;
+    text-shadow: none;
+    padding: 0;
   }
 
   .placement-scale-root .dynamic-text {
@@ -1964,14 +1968,13 @@
     background: transparent;
     cursor: grab;
     text-align: left;
-    transform: translateY(calc(var(--dynamic-text-size, 10px) * -1));
-    transform-origin: left bottom;
+    /* Top-left of the glyph sits on the mapped % — same spot Admin clicked / saved. */
+    transform: none;
+    transform-origin: left top;
   }
 
   .placement-scale-root .dynamic-text-anchor {
-    transform: translateY(
-      calc(var(--dynamic-text-size, 10px) * 100cqw / var(--placement-natural-width, 1000) * -1)
-    );
+    transform: none;
   }
 
   .placement-signature-img {

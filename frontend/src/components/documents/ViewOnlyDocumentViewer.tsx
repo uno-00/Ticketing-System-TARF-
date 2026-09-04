@@ -1,24 +1,29 @@
 import { EmptyState, PanelLoading } from "@/components/layout/workspace-ui";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { placementCanvasStyle } from "@/components/documents/buildPlacementOverlay";
+import { DEFAULT_PRINT_PLACEMENT_FONT_SIZE } from "@/lib/form-builder-store";
 import { isImagePath, isPdfPath, resolveMediaUrl } from "@/lib/media-url";
 import {
+  pdfBlobAllPagesStackedToDataUrl,
   pdfBlobAllPagesToDataUrls,
-  pdfBlobFirstPageToDataUrl,
 } from "@/lib/pdf-template";
 import { cn } from "@/lib/utils";
 
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.1;
 const FIT_ZOOM = 1;
-/** Cap for embedded/page previews (not full-bleed dialogs). */
+/** Same reading width as other embedded document viewers (tickets, approvals, etc.). */
 const MAX_DOCUMENT_WIDTH_PX = 960;
+/** Must match Form Builder `pdfAllPagesStackedToDataUrl` default so % maps stay locked. */
+const PLACEMENT_PDF_RENDER_WIDTH = 1600;
 
 /**
  * Full form page + placement overlay.
- * Image fills the panel width; text scales with the image so alignment stays locked.
+ * Same canvas shell as Form Builder: CSS vars on the relative box, markers in
+ * `placement-scale-root`, left/top % only — no extra position tweaks.
  */
 function MappedFormPage({
   imageSrc,
@@ -28,6 +33,7 @@ function MappedFormPage({
   zoom,
   onImageError,
   fullBleed,
+  placementFontSize = DEFAULT_PRINT_PLACEMENT_FONT_SIZE,
 }: {
   imageSrc: string;
   alt: string;
@@ -36,6 +42,7 @@ function MappedFormPage({
   zoom: number;
   onImageError?: () => void;
   fullBleed?: boolean;
+  placementFontSize?: number;
 }) {
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
   const displayWidth = Math.round(baseWidth * zoom);
@@ -45,12 +52,12 @@ function MappedFormPage({
   }, [imageSrc]);
 
   // Full-bleed dialogs: always span 100% of the viewport (zoom grows past that).
-  // Embedded previews: cap width and center.
+  // Embedded previews: fixed reading width, centered — not stretched to the panel.
   const outerStyle = fullBleed
     ? zoom === 1
       ? { width: "100%" as const }
       : { width: `${zoom * 100}%` }
-    : { maxWidth: displayWidth };
+    : { width: displayWidth, maxWidth: "100%" };
 
   return (
     <div className={cn("w-full", !fullBleed && "mx-auto")} style={outerStyle}>
@@ -59,6 +66,7 @@ function MappedFormPage({
           "relative w-full overflow-hidden bg-white",
           fullBleed ? "rounded-none shadow-none ring-0" : "rounded-md shadow-sm ring-1 ring-border/80",
         )}
+        style={placementCanvasStyle(placementFontSize, naturalWidth)}
       >
         <img
           src={imageSrc}
@@ -77,11 +85,6 @@ function MappedFormPage({
               "pointer-events-none absolute inset-0 z-10",
               naturalWidth ? "placement-scale-root" : null,
             )}
-            style={
-              naturalWidth
-                ? ({ "--placement-natural-width": naturalWidth } as CSSProperties)
-                : undefined
-            }
           >
             {overlay}
           </div>
@@ -103,6 +106,8 @@ type ViewOnlyDocumentViewerProps = {
   emptyMessage?: string;
   /** Use all available height (e.g. inside a dialog). */
   fillHeight?: boolean;
+  /** Same font size Admin set when mapping fields (keeps glyphs on the mapped spots). */
+  placementFontSize?: number;
 };
 
 function clampZoom(value: number) {
@@ -244,6 +249,7 @@ function ImageDocument({
   fillHeight,
   overlay,
   viewportClassName,
+  placementFontSize,
 }: {
   src: string;
   alt: string;
@@ -253,6 +259,7 @@ function ImageDocument({
   fillHeight?: boolean;
   overlay?: ReactNode;
   viewportClassName?: string;
+  placementFontSize?: number;
 }) {
   const [failed, setFailed] = useState(false);
   const displayWidth = Math.round(baseWidth * zoom);
@@ -285,6 +292,7 @@ function ImageDocument({
           zoom={zoom}
           onImageError={() => setFailed(true)}
           fullBleed={fillHeight}
+          placementFontSize={placementFontSize}
         />
       </DocumentViewport>
     );
@@ -352,6 +360,7 @@ function PdfEmbedDocument({
   fillHeight,
   overlay,
   viewportClassName,
+  placementFontSize,
 }: {
   src?: string | null;
   blobLoader?: () => Promise<Blob>;
@@ -362,6 +371,7 @@ function PdfEmbedDocument({
   fillHeight?: boolean;
   overlay?: ReactNode;
   viewportClassName?: string;
+  placementFontSize?: number;
 }) {
   const [pageImageUrls, setPageImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -384,8 +394,9 @@ function PdfEmbedDocument({
         const blob = await loadDocumentBlob(resolved ?? "", blobLoader);
 
         if (showMappedOverlay) {
-          const { dataUrl } = await pdfBlobFirstPageToDataUrl(blob, {
-            maxWidth: fillHeight ? 2000 : 1600,
+          // Same stack width as Form Builder so mapped % stays locked to the form.
+          const { dataUrl } = await pdfBlobAllPagesStackedToDataUrl(blob, {
+            maxWidth: PLACEMENT_PDF_RENDER_WIDTH,
           });
           if (!cancelled) setPageImageUrls([dataUrl]);
           return;
@@ -433,6 +444,7 @@ function PdfEmbedDocument({
           baseWidth={baseWidth}
           zoom={zoom}
           fullBleed={fillHeight}
+          placementFontSize={placementFontSize}
         />
       </DocumentViewport>
     );
@@ -488,6 +500,7 @@ export function ViewOnlyDocumentViewer({
   viewportClassName,
   emptyMessage = "No document is available.",
   fillHeight = false,
+  placementFontSize = DEFAULT_PRINT_PLACEMENT_FONT_SIZE,
 }: ViewOnlyDocumentViewerProps) {
   const [zoom, setZoom] = useState(FIT_ZOOM);
   const { viewportRef, baseWidth } = useDocumentLayout(enabled, fillHeight);
@@ -536,6 +549,7 @@ export function ViewOnlyDocumentViewer({
           fillHeight={fillHeight}
           overlay={overlay}
           viewportClassName={viewportClassName}
+          placementFontSize={placementFontSize}
         />
       </div>
     );
@@ -555,6 +569,7 @@ export function ViewOnlyDocumentViewer({
           fillHeight={fillHeight}
           overlay={overlay}
           viewportClassName={viewportClassName}
+          placementFontSize={placementFontSize}
         />
       </div>
     );

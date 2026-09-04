@@ -113,7 +113,11 @@ function FormReviewPage() {
         title="Form template"
         description="Uploaded by Admin. Zoom and scroll to review. View only."
       >
-        <FormUploadedFileViewer form={form} />
+        <div className="bg-muted/30 p-4 sm:p-5">
+          <div className="mx-auto max-w-3xl overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+            <FormUploadedFileViewer form={form} />
+          </div>
+        </div>
       </DataPanel>
 
       {canReview ? (

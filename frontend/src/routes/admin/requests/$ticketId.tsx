@@ -291,7 +291,7 @@ function TicketDetailPage() {
               {!isAwaitingClient && ticket.status !== "closed" ? (
                 <ActionPanel
                   title="Update status"
-                  description="The client marks the service complete when ICT work is done, then submits feedback and closes the request."
+                  description="The client marks the service complete when work is done, then submits feedback and closes the request."
                 >
                   <div className="flex flex-wrap gap-2">
                     {ADMIN_STATUSES.map((s) => {

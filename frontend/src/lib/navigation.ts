@@ -52,7 +52,7 @@ export function isAdminRole(role: string | undefined) {
   return role === "admin" || role === "super_admin";
 }
 export function isClientRole(role: string | undefined) {
-  // Admins and Super Admin may also use the client portal to submit their own TA requests.
+  // Admins and Super Admin may also use the client portal to submit their own requests.
   return role === "user" || role === "admin" || role === "super_admin";
 }
 export function isRecordsRole(role: string | undefined) {

@@ -90,7 +90,7 @@ function ClientFeedbackPage() {
     <div className="page-shell">
       <WorkspacePageHeader
         title="Service Feedback"
-        description="After ICT completes your request, complete the official satisfaction survey, then confirm here."
+        description="After your request is completed, fill out the official satisfaction survey, then confirm here."
         actions={<ActionLink to={CLIENT_REQUESTS} variant="outline">My requests</ActionLink>}
       />
 

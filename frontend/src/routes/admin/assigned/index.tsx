@@ -28,7 +28,7 @@ function AssignedRequestsPage() {
     <div className="page-shell">
       <WorkspacePageHeader
         title="My Assigned Requests"
-        description="Requests assigned to you. When ICT work is finished, the client marks the service complete, submits feedback, and closes the request."
+        description="Requests assigned to you. When work is finished, the client marks the service complete, submits feedback, and closes the request."
       />
 
       <DataPanel title={`${items.length} active assignment${items.length === 1 ? "" : "s"}`}>

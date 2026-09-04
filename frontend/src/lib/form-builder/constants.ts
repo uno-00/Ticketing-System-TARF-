@@ -16,7 +16,7 @@ export const FORM_BUILDER_STEPS = [
   { key: "general", label: "General" },
   { key: "fields", label: "Fields" },
   { key: "print", label: "Print Template" },
-  { key: "procedure", label: "Procedure" },
+  { key: "procedure", label: "Supporting Doc" },
 ] as const;
 
 export type FormBuilderStepKey = (typeof FORM_BUILDER_STEPS)[number]["key"];

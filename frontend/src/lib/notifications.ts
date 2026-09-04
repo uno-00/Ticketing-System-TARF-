@@ -101,7 +101,7 @@ function clientStatusMessage(
     case "open":
     case "in_progress":
     case "pending":
-      return `${formTitle} — mark service complete when ICT work is done`;
+      return `${formTitle} — mark service complete when work is done`;
     case "resolved":
       return feedbackSubmitted
         ? `${formTitle} — ready to close after feedback`
