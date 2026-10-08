@@ -94,9 +94,8 @@ export function UnifiedLoginPage() {
               >
                 <p className="font-medium">API server is not running</p>
                 <p className="mt-1 text-xs leading-relaxed opacity-90">
-                  From project root run{" "}
-                  <code className="rounded bg-black/10 px-1">bun run start</code> and ensure
-                  MongoDB is running.
+                  From the project root run{" "}
+                  <code className="rounded bg-black/10 px-1">bun run start</code>.
                 </p>
               </div>
             ) : null}

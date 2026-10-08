@@ -3,12 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { placementCanvasStyle } from "@/components/documents/buildPlacementOverlay";
+import { PlacementTemplateContext } from "@/components/documents/PlacementTextSlot";
 import { ajax } from "@/lib/ajax";
 import { isImagePath, isPdfPath, resolveMediaUrl } from "@/lib/media-url";
 import {
   pdfBlobAllPagesStackedToDataUrl,
   pdfBlobAllPagesToDataUrls,
 } from "@/lib/pdf-template";
+import { darkMapFromImageSource, type TemplateDarkMap } from "@/lib/placement-free-space";
 import { cn } from "@/lib/utils";
 
 const MIN_ZOOM = 0.3;
@@ -45,11 +47,42 @@ function MappedFormPage({
   placementFontSize?: number;
 }) {
   const [naturalWidth, setNaturalWidth] = useState<number | null>(null);
+  // Ink map of the template so populated text wraps inside its own blank cell.
+  const [templateMap, setTemplateMap] = useState<TemplateDarkMap | null>(null);
+  const analysedSrcRef = useRef<string | null>(null);
   const displayWidth = Math.round(baseWidth * zoom);
+  // A form shown narrower than the reading width is a scaled-down page: its
+  // populated text scales with it, or 16px values outgrow their printed cells.
+  const overlayScale = Math.min(1, baseWidth / MAX_DOCUMENT_WIDTH_PX);
 
   useEffect(() => {
     setNaturalWidth(null);
+    setTemplateMap(null);
+    analysedSrcRef.current = null;
   }, [imageSrc]);
+
+  const analyseTemplate = (img: HTMLImageElement) => {
+    if (!overlay || analysedSrcRef.current === imageSrc) return;
+    analysedSrcRef.current = imageSrc;
+    const direct = darkMapFromImageSource(img, img.naturalWidth, img.naturalHeight);
+    if (direct) {
+      setTemplateMap(direct);
+      return;
+    }
+    // Cross-origin image: the canvas is unreadable, so re-read the file as a blob.
+    void (async () => {
+      try {
+        const response = await ajax(imageSrc);
+        if (!response.ok) return;
+        const bitmap = await createImageBitmap(await response.blob());
+        const map = darkMapFromImageSource(bitmap, bitmap.width, bitmap.height);
+        bitmap.close();
+        if (map && analysedSrcRef.current === imageSrc) setTemplateMap(map);
+      } catch {
+        /* Text still wraps using the spacing between mapped fields. */
+      }
+    })();
+  };
 
   // Full-bleed dialogs: always span 100% of the viewport (zoom grows past that).
   // Embedded previews: fixed reading width, centered — not stretched to the panel.
@@ -66,7 +99,7 @@ function MappedFormPage({
           "relative w-full overflow-visible bg-white",
           fullBleed ? "rounded-none shadow-none ring-0" : "rounded-md shadow-sm ring-1 ring-border/80",
         )}
-        style={placementCanvasStyle(zoom, naturalWidth)}
+        style={placementCanvasStyle(zoom * overlayScale, naturalWidth)}
       >
         <img
           src={imageSrc}
@@ -76,12 +109,15 @@ function MappedFormPage({
           onLoad={(e) => {
             const w = e.currentTarget.naturalWidth;
             if (w > 0) setNaturalWidth(w);
+            analyseTemplate(e.currentTarget);
           }}
           onError={onImageError}
         />
         {overlay ? (
           <div className="pointer-events-none absolute inset-0 z-10 placement-scale-root">
-            {overlay}
+            <PlacementTemplateContext.Provider value={templateMap}>
+              {overlay}
+            </PlacementTemplateContext.Provider>
           </div>
         ) : null}
       </div>

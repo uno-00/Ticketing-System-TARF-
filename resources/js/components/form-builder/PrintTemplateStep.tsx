@@ -20,7 +20,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { placementCanvasStyle, placementSlotWidthPct } from "@/components/documents/buildPlacementOverlay";
+import { placementCanvasStyle } from "@/components/documents/buildPlacementOverlay";
+import {
+  PlacementTemplateContext,
+  usePlacementSlotFit,
+} from "@/components/documents/PlacementTextSlot";
+import { darkMapFromImageSource, type TemplateDarkMap } from "@/lib/placement-free-space";
 import {
   DEFAULT_PRINT_PLACEMENT_FONT_SIZE,
   type FormDraft,
@@ -46,6 +51,68 @@ function clampPct(n: number): number {
   return Math.min(100, Math.max(0, n));
 }
 
+type BuilderTextMarkerProps = {
+  placement: PrintFieldPlacement;
+  placements: PrintFieldPlacement[];
+  preview: string;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+};
+
+/**
+ * Draggable text marker. Uses the same cell-fitting as the filled form, so
+ * while it is dragged the frame re-wraps to the blank cell under it instead of
+ * running over printed labels, borders, or neighbouring fields.
+ */
+function BuilderTextMarker({
+  placement,
+  placements,
+  preview,
+  dragging,
+  onDragStart,
+  onDragEnd,
+}: BuilderTextMarkerProps) {
+  const { anchorRef, innerRef, box } = usePlacementSlotFit<HTMLButtonElement, HTMLSpanElement>(
+    placement,
+    placements,
+  );
+  return (
+    <button
+      ref={anchorRef}
+      type="button"
+      className={cn("dynamic-text-anchor", dragging && "is-dragging")}
+      style={{
+        left: `${placement.xPct}%`,
+        top: `${placement.yPct}%`,
+        width: `${box.widthPct}%`,
+        maxWidth: `${box.widthPct}%`,
+        overflow: "hidden",
+        boxSizing: "border-box",
+      }}
+      title={`${placement.variable} — ${preview}`}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onDragStart();
+      }}
+      onPointerUp={(e) => {
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+          /* noop */
+        }
+        onDragEnd();
+      }}
+    >
+      <span ref={innerRef} className="dynamic-text placement-wrap">
+        {preview}
+      </span>
+    </button>
+  );
+}
+
 type PrintTemplateStepProps = {
   draft: FormDraft;
   update: (patch: Partial<FormDraft>) => void;
@@ -67,8 +134,12 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
 
+  // Ink map of the template: tells each marker where its blank cell ends.
+  const [templateMap, setTemplateMap] = useState<TemplateDarkMap | null>(null);
+
   useEffect(() => {
     setTemplateNaturalWidth(null);
+    setTemplateMap(null);
   }, [image]);
 
   const mergedPrintPreview = useMemo(
@@ -587,11 +658,19 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                         onLoad={(e) => {
                           const w = e.currentTarget.naturalWidth;
                           if (w > 0) setTemplateNaturalWidth(w);
+                          setTemplateMap(
+                            darkMapFromImageSource(
+                              e.currentTarget,
+                              e.currentTarget.naturalWidth,
+                              e.currentTarget.naturalHeight,
+                            ),
+                          );
                         }}
                       />
                       <div
                         className={cn("absolute inset-0 placement-scale-root")}
                       >
+                        <PlacementTemplateContext.Provider value={templateMap}>
                         {placements.map((p) => {
                           const field = draft.fields.find((item) => item.variable === p.variable);
                           let preview = p.label;
@@ -608,6 +687,19 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                               sampleValues[p.variable]?.replace(/\s*\(sample\)\s*$/i, "").trim() ||
                               p.label;
                           }
+                          if (preview !== PLACEMENT_CHECKMARK) {
+                            return (
+                              <BuilderTextMarker
+                                key={p.id}
+                                placement={p}
+                                placements={placements}
+                                preview={preview}
+                                dragging={draggingId === p.id}
+                                onDragStart={() => setDraggingId(p.id)}
+                                onDragEnd={() => setDraggingId(null)}
+                              />
+                            );
+                          }
                           return (
                             <button
                               key={p.id}
@@ -616,49 +708,28 @@ export function PrintTemplateStep({ draft, update }: PrintTemplateStepProps) {
                                 "dynamic-text-anchor",
                                 draggingId === p.id && "is-dragging",
                               )}
-                              style={
-                                preview === PLACEMENT_CHECKMARK
-                                  ? { left: `${p.xPct}%`, top: `${p.yPct}%`, overflow: "visible" }
-                                  : {
-                                      left: `${p.xPct}%`,
-                                      top: `${p.yPct}%`,
-                                      width: `${placementSlotWidthPct(p.xPct, p.yPct, placements, p.id)}%`,
-                                      maxWidth: `${placementSlotWidthPct(p.xPct, p.yPct, placements, p.id)}%`,
-                                      overflow: "hidden",
-                                      boxSizing: "border-box",
-                                    }
-                              }
+                              style={{ left: `${p.xPct}%`, top: `${p.yPct}%`, overflow: "visible" }}
                               title={`${p.variable} — ${preview}`}
                               onPointerDown={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                (e.currentTarget as HTMLButtonElement).setPointerCapture(
-                                  e.pointerId,
-                                );
+                                e.currentTarget.setPointerCapture(e.pointerId);
                                 setDraggingId(p.id);
                               }}
                               onPointerUp={(e) => {
                                 try {
-                                  (e.currentTarget as HTMLButtonElement).releasePointerCapture(
-                                    e.pointerId,
-                                  );
+                                  e.currentTarget.releasePointerCapture(e.pointerId);
                                 } catch {
                                   /* noop */
                                 }
                                 setDraggingId(null);
                               }}
                             >
-                              <span
-                                className={cn(
-                                  "dynamic-text",
-                                  preview === PLACEMENT_CHECKMARK && "placement-checkmark",
-                                )}
-                              >
-                                {preview}
-                              </span>
+                              <span className="dynamic-text placement-checkmark">{preview}</span>
                             </button>
                           );
                         })}
+                        </PlacementTemplateContext.Provider>
                       </div>
                     </div>
                   </div>

@@ -34,7 +34,7 @@ export function isImageAnswerValue(value: unknown): value is string {
   );
 }
 
-/** Persist every field key so Mongoose does not strip an "empty" answers object. */
+/** Keep a key for every field so empty answers are still stored. */
 export function normalizeTicketAnswers(
   fields: FormFieldRef[],
   answers: Record<string, unknown>,

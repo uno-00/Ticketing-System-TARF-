@@ -1,5 +1,5 @@
 /**
- * Legacy Mongo seed — demo @nmp.gov.ph accounts removed.
+ * Legacy seed — demo @nmp.gov.ph accounts removed.
  * Use Laravel: php artisan nmp:seed (purges non-PAMANA demos; PAMANA/org logins only).
  */
 async function seed() {

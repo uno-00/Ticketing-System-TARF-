@@ -1,4 +1,9 @@
 import type { CSSProperties, ReactNode } from "react";
+import { PlacementSignature } from "@/components/documents/PlacementSignature";
+import {
+  PlacementTextSlot,
+  placementSlotWidthPct,
+} from "@/components/documents/PlacementTextSlot";
 import type { FormRecord, LiveFormField } from "@/lib/api/types";
 import type { PrintFieldPlacement } from "@/lib/form-builder-store";
 import { DEFAULT_PRINT_PLACEMENT_FONT_SIZE } from "@/lib/form-builder-store";
@@ -18,7 +23,8 @@ import {
   resolveAnswerForVariable,
   resolveFormPlacements,
 } from "@/lib/placement-values";
-import { cn } from "@/lib/utils";
+
+export { placementSlotWidthPct };
 
 type BuildPlacementOverlayOptions = {
   /**
@@ -33,52 +39,6 @@ type BuildPlacementOverlayOptions = {
 
 /** Gap after the Others checkbox so typed text sits at the start of the blank. */
 const OTHERS_BLANK_AUTO_OFFSET = "2.75em";
-const SAME_ROW_Y_PCT = 2.5;
-
-/** Width as % of form width — stops at the next marker on the same row. */
-export function placementSlotWidthPct(
-  xPct: number,
-  yPct: number,
-  placements: PrintFieldPlacement[],
-  selfId?: string,
-): number {
-  let nextX = 99.2;
-  for (const other of placements) {
-    if (selfId && other.id === selfId) continue;
-    if (Math.abs(other.yPct - yPct) > SAME_ROW_Y_PCT) continue;
-    if (other.xPct <= xPct + 0.35) continue;
-    nextX = Math.min(nextX, other.xPct);
-  }
-  return Math.max(3, nextX - xPct - 0.6);
-}
-
-function isWrappablePlacement(variable: string, label: string): boolean {
-  const v = variable.replace(/^\{\{|\}\}$/g, "").toLowerCase();
-  if (v.includes("email") || v.includes("prof_email")) return true;
-  if (/email/i.test(label)) return true;
-  return false;
-}
-
-function textSlotAnchorStyle(
-  xPct: number,
-  yPct: number,
-  placements: PrintFieldPlacement[],
-  selfId: string,
-  wrap: boolean,
-  extra?: CSSProperties,
-): CSSProperties {
-  const widthPct = placementSlotWidthPct(xPct, yPct, placements, selfId);
-  return {
-    left: `${xPct}%`,
-    top: `${yPct}%`,
-    width: `${widthPct}%`,
-    maxWidth: `${widthPct}%`,
-    overflow: "hidden",
-    boxSizing: "border-box",
-    ...(wrap ? { whiteSpace: "normal" as const } : { whiteSpace: "nowrap" as const }),
-    ...extra,
-  };
-}
 
 function findFieldForPlacement(fields: LiveFormField[], placementVariable: string) {
   const inner = placementVariable.replace(/^\{\{|\}\}$/g, "");
@@ -122,18 +82,12 @@ function renderPlacementMarkers(
       const src = resolveSignatureImageSrc(raw);
       if (src) {
         markers.push(
-          <span
+          <PlacementSignature
             key={placement.id}
-            className="dynamic-text-anchor pointer-events-none"
-            style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%` }}
-            title={placement.label}
-          >
-            <img
-              src={src}
-              alt={placement.label || "Signature"}
-              className="placement-signature-img"
-            />
-          </span>,
+            placement={placement}
+            placements={placements}
+            src={src}
+          />,
         );
         continue;
       }
@@ -149,39 +103,33 @@ function renderPlacementMarkers(
     );
     if (!text) continue;
 
-      const isCheckmark = text === PLACEMENT_CHECKMARK;
-      const isOthersBlank = isOthersBlankPlacementLabel(placement.label);
-      const wrap = isWrappablePlacement(placement.variable, placement.label);
+    const isCheckmark = text === PLACEMENT_CHECKMARK;
+    const isOthersBlank = isOthersBlankPlacementLabel(placement.label);
 
+    if (isCheckmark) {
       markers.push(
         <span
           key={placement.id}
           className="dynamic-text-anchor pointer-events-none bg-transparent"
-          style={
-            isCheckmark
-              ? { left: `${placement.xPct}%`, top: `${placement.yPct}%`, overflow: "visible" }
-              : textSlotAnchorStyle(
-                  placement.xPct,
-                  placement.yPct,
-                  placements,
-                  placement.id,
-                  wrap,
-                )
-          }
+          style={{ left: `${placement.xPct}%`, top: `${placement.yPct}%`, overflow: "visible" }}
           title={placement.label}
         >
-          <span
-            className={cn(
-              "dynamic-text bg-transparent",
-              isCheckmark && "placement-checkmark",
-              isOthersBlank && "placement-others-blank",
-              wrap && "placement-wrap",
-            )}
-          >
-            {text}
-          </span>
+          <span className="dynamic-text placement-checkmark bg-transparent">{text}</span>
         </span>,
       );
+    } else {
+      // Every populated value goes through the same wrapping slot.
+      markers.push(
+        <PlacementTextSlot
+          key={placement.id}
+          placement={placement}
+          placements={placements}
+          text={text}
+          title={placement.label}
+          className={isOthersBlank ? "placement-others-blank" : undefined}
+        />,
+      );
+    }
 
     // Existing forms often only mapped the Others checkbox. Put typed text on the
     // blank line to the right when no explicit "Other (blank)" marker exists.
@@ -198,23 +146,15 @@ function renderPlacementMarkers(
       );
       if (detail && !hasBlankMarker) {
         markers.push(
-          <span
+          <PlacementTextSlot
             key={`${placement.id}-others-blank`}
-            className="dynamic-text-anchor pointer-events-none bg-transparent"
-            style={textSlotAnchorStyle(
-              placement.xPct,
-              placement.yPct,
-              placements,
-              placement.id,
-              true,
-              { left: `calc(${placement.xPct}% + ${OTHERS_BLANK_AUTO_OFFSET})` },
-            )}
+            placement={placement}
+            placements={placements}
+            text={detail}
             title={`${placement.label} (blank)`}
-          >
-            <span className="dynamic-text placement-others-blank bg-transparent">
-              {detail}
-            </span>
-          </span>,
+            className="placement-others-blank"
+            inset={OTHERS_BLANK_AUTO_OFFSET}
+          />,
         );
       }
     }
